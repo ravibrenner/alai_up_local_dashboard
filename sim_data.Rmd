@@ -1,0 +1,27 @@
+---
+title: "Create simulated data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+input_df <- read_excel("data/local minimal template.xlsx")
+
+input_df[1:1000,] <- NA
+```
+
+```{r}
+df <- input_df |>
+  mutate(site = "My site",
+         alai_up_uid = row_number(),
+         age = 18+rnorm(1000, mean = 22, sd = 8)) 
+```
+
