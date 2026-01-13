@@ -364,12 +364,6 @@ server <- function(input, output, session) {
               status = "info",
               solidHeader = TRUE,
               help_text$info1),
-          box(id = "loc1_box",
-              title = "ZIP codes",
-              width = 12,
-              status = "primary",
-              solidheader = TRUE,
-              leafletOutput("zip_map")),
           # Plot boxes
           map(demo_sections_info[-1], function(section) {
             box(

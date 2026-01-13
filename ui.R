@@ -10,7 +10,6 @@ library(showtext)
 library(ggpubr)
 library(gt)
 library(ggsurvfit)
-library(leaflet)
 
 ui <- dashboardPage(
   dashboardHeader(

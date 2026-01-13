@@ -57,30 +57,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       " in ", selected_year()
     ))
   })
-  
-  output$zip_map <- renderLeaflet({ 
-    zip_counts <- tbl |>
-      group_by(zip_code) |>
-      count()
-    
-    zip_geom <- tigris::zctas(starts_with = zip_counts$zip_code)
-    
-    zip_counts <- zip_counts |>
-      ungroup() |>
-      inner_join(zip_geom |> select(ZCTA5CE20,
-                                    geometry),
-                 by = join_by(zip_code == ZCTA5CE20)) |>
-      sf::st_as_sf()
-    
-    pal <- colorNumeric("YlOrRd", domain = zip_counts$n)
-    
-    leaflet(zip_counts) |> 
-      addTiles() |>
-      addPolygons(fillColor = ~pal(n),
-                  label = ~zip_code,
-                  popup = ~n)
-  })
-  
+
   demo_sections <- list(
     sex1       = list(var = "sex_birth",        label = "sex_demographics"),
     race1      = list(var = "race",             label = "race_demographics"),
