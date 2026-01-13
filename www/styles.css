@@ -1,0 +1,113 @@
+/* FONT */
+body, .content-wrapper, .main-header, .main-sidebar{
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;  
+  }
+/* logo */
+.skin-blue .main-header .logo {
+  background-color:#100C48;
+  }
+/* logo when hovered */
+.skin-blue .main-header .logo:hover {
+  background-color: #100C48;
+  }
+/* navbar (rest of the header) */
+.skin-blue .main-header .navbar {
+  background-color: #100C48;
+  margin-left: 300px;
+  }   
+/* main sidebar */
+.skin-blue .main-sidebar {
+  background-color: #3D748D;
+  }
+/* active selected tab in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+  background-color:#B5D2DF;
+  }
+/* other links in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu a{
+  background-color:#3D748D;
+  color: #000000;
+  }
+/* other links in the sidebarmenu when hovered */
+.skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+  background-color: #A6A6A6;
+  }
+/* toggle button when hovered  */      
+.skin-blue .main-header .navbar .sidebar-toggle:hover{
+  background-color: #A6A6A6;
+  }
+/* box colors for primary and info boxes*/
+.box.box-solid.box-primary>.box-header{
+  background-color:  #100C48;
+  }
+.box.box-solid.box-primary {
+  border: 1px solid  #100C48;
+  }
+.box.box-solid.box-info>.box-header{
+  background-color:  #fE5000;
+  }
+.box.box-solid.box-info {
+  border: 1px solid #fE5000;
+  }
+
+/*make header, sidebar fixed and control width and margins*/
+.main-header {
+  position: fixed;
+  width: 100%;
+  z-index: 1030;
+  }
+.content-wrapper, .main-footer, .right-side {
+  margin-top: 50px;  /* Adjust depending on header height */
+  margin-left: 300px; /* Adjust depending on sidebar width */
+  }
+.skin-blue .main-header .logo {
+  width: 300px;
+}
+.main-sidebar {
+  position: fixed;
+  height: 100%;
+  overflow-y: auto;
+  }
+/* Prevent content from hiding behind the fixed sidebar */
+.content-wrapper, .main-footer {
+  margin-left: 300px;  /* sidebar width */
+  }
+    
+/*for sidebar within pages*/
+html {
+  scroll-behavior: smooth;
+  }
+.toc-container {
+  position: fixed;
+  top: 70px; 
+  width: 12%; /* controls width of sidebar*/
+  background-color: #f7f7f7;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  }
+.toc-links {
+  font-size: 14px;
+  }
+.toc-links .action-button {
+  display: block;
+  margin-bottom: 10px;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+  color: #007bff;
+  cursor: pointer;
+  }
+.content-area {
+  padding: 10px 30px;
+  }
+  
+/*upload progress*/
+.shiny-file-input-progress {
+  display: none ;}
+#upload_progress {display: none; }
+

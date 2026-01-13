@@ -1,4 +1,4 @@
-renderSectionPage <- function(input, output, credentials, page_id, sections_info, n_output_id) {
+renderSectionPage <- function(input, output, page_id, sections_info, n_output_id) {
   # get page number
   page_num <- str_extract(sections_info[[1]]$id,"\\d+")
 
@@ -37,7 +37,7 @@ renderSectionPage <- function(input, output, credentials, page_id, sections_info
   
   # Set the UI render output
   output[[page_id]] <- renderUI({
-    req(credentials()$user_auth)
+    req(input$go_button)
     fluidPage(
       fluidRow(
         column(

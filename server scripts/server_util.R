@@ -219,56 +219,6 @@ time_period_filter <- function(input_df, start_date, end_date){
   
 }
 
-# Determine dataset for non-admin users
-get_dataset_for_user <- function(user_info) {
-  name_map <- list(
-    "AP (Dallas, TX)"        = "Abounding",
-    "BCHD (Baltimore, MD)"   = "Baltimore",
-    "SIDC (Chicago, IL)"     = "SIDC",
-    "PIHC (Decatur, GA)"     = "PIHC",
-    "CFHC (Biloxi, MS)"      = "Coastal",
-    "SCC (Orlando, FL)"      = "Florida",
-    "SAAF (San Antonio, TX)" = "SAAF",
-    "JMFC (New York, NY)"    = "Harlem",
-    "All ALAI UP Sites"      = "All ALAI UP Sites"
-  )
-  
-  name_map[[user_info]]
-}
-
-get_user_for_dataset <- function(user_info) {
-  # input first, function will give you second
-  name_map <- list(
-    "AP (Dallas, TX)"        = "Abounding Prosperity",
-    "BCHD (Baltimore, MD)"   = "Baltimore City Health Department",
-    "SIDC (Chicago, IL)"     = "Sinai Chicago",
-    "PIHC (Decatur, GA)"     = "Positive Impact Health Center",
-    "CFHC (Biloxi, MS)"      = "Coastal Family Health Center",
-    "SCC (Orlando, FL)"      = "Sunshine Care Center",
-    "SAAF (San Antonio, TX)" = "SAAF",
-    "JMFC (New York, NY)"    = "Jack Martin",
-    "All ALAI UP Sites"      = "All ALAI UP Sites"
-  )
-  
-  name_map[[user_info]]
-}
-
-get_user_for_login <- function(user_info) {
-  # input first, function will give you second
-  name_map <- list(            
-    "Abounding" = "AP (Dallas, TX)"       ,
-    "Baltimore" = "BCHD (Baltimore, MD)"  ,
-    "SIDC"      = "SIDC (Chicago, IL)"    ,
-    "PIHC"      = "PIHC (Decatur, GA)"    ,
-    "Coastal"   = "CFHC (Biloxi, MS)"     ,
-    "Sunshine"  = "SCC (Orlando, FL)"     ,
-    "SAAF"      = "SAAF (San Antonio, TX)",
-    "Harlem"    = "JMFC (New York, NY)",
-    "alai_up"   = "All ALAI UP Sites"
-  )
-  
-  name_map[[user_info]]
-}
 
 # function for a single demographics plot, based on imput column
 demo_plot <- function(input_df, in_col, base_size_in,
@@ -285,7 +235,7 @@ demo_plot <- function(input_df, in_col, base_size_in,
                     in_col_string == "insurance_status" ~ "Insurance status",
                     in_col_string == "housing_status" ~ "Housing status")
   
-  title_text = str_c("PWH at ", get_user_for_dataset(selected_site),
+  title_text = str_c("PWH at ", selected_site,
                      " active in ",selected_year,
                      " by ", title)
   
@@ -555,14 +505,14 @@ ic_var_plot <- function(input_df,
     max_x = max(ic_df$Percent,na.rm=T)
     x_lim = max(1.15,max_x+0.15)
     
-    if (in_var == "assessed") {
+    if (in_var %in% c("assessed","educated","screened")) {
       title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",get_user_for_dataset(selected_site),
+                         " at ",selected_site,
                          " among ",unique(ic_df$prev_lab), 
                          " active in ",selected_year)
     } else {
       title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",get_user_for_dataset(selected_site),
+                         " at ",selected_site,
                          " among ",unique(ic_df$prev_lab), 
                          " PWH active in ",selected_year)
     }
@@ -635,15 +585,15 @@ ic_var_plot <- function(input_df,
                       group_var_string == "housing_status" ~ "Housing status")
     
     
-    if (in_var == "assessed") {
+    if (in_var %in% c("assessed","educated","screened")) {
       title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",get_user_for_dataset(selected_site),
+                         " at ",selected_site,
                          " among ",unique(ic_df$prev_lab), 
                          " active in ",selected_year,
                          " by ", title)
     } else {
       title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",get_user_for_dataset(selected_site),
+                         " at ",selected_site,
                          " among ",unique(ic_df$prev_lab), 
                          " PWH active in ",selected_year,
                          " by ", title)
@@ -743,13 +693,6 @@ key_pop_var_plot <- function(input_df, in_var,
   df_idu <- process_key_pop(input_df, risk_idu == 1, "IDU")
   df_tg  <- process_key_pop(input_df, gender_id %in% c(3, 4, 5), "Transgender/nonbinary")
   
-  if (selected_site == "SCC (Orlando, FL)"){
-    temp <- bind_rows(df_msm, df_idu)
-  } else {
-    temp <- bind_rows(df_msm, df_idu, df_tg)
-  }
-
-  
   max_x = max(temp$Percent,na.rm=T)
   x_lim = max(1.15,max_x+0.15)
   
@@ -774,15 +717,15 @@ key_pop_var_plot <- function(input_df, in_var,
     pull(pct)
   
 
-  if (in_var == "assessed") {
+  if (in_var %in% c("assessed","educated","screened")) {
     title_text = str_c(str_to_title(unique(temp$Variable)), 
-                       " at ",get_user_for_dataset(selected_site),
+                       " at ",selected_site,
                        " among ",unique(temp$prev_lab), 
                        " active in ",selected_year,
                        " by key populations")
   } else {
     title_text = str_c(str_to_title(unique(temp$Variable)), 
-                       " at ",get_user_for_dataset(selected_site),
+                       " at ",selected_site,
                        " among ",unique(temp$prev_lab), 
                        " PWH active in ",selected_year,
                        " by key populations")

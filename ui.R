@@ -25,7 +25,6 @@ ui <- dashboardPage(
     width = 300,
     sidebarMenu(id='sidebar',
                 menuItem(strong("Home"), tabName= 'home'),
-                uiOutput('site_choice'),
                 menuItem(text = strong("Clinic Demographics"),
                          tabName = 'demographics_header',
                          menuItem(text = "Overall",
@@ -99,7 +98,20 @@ ui <- dashboardPage(
     tabItems(
       tabItem(
         tabName = 'home',
-        shinyauthr::loginUI("login"),
+        fluidRow(
+          box(
+            id = "input_box",
+            title = "Upload data",
+            width = 6,
+            status = "primary",
+            solidHeader = TRUE,
+            fileInput("file1", "Choose Data File (.xlsx)", accept = ".xlsx"),
+            selectInput("select_sheet","Select a sheet",choices = NULL),
+            textInput("site_name_input","Site name", value = NULL),
+            disabled(actionButton("go_button",
+                                  "Upload data",
+                                  icon = icon("play")))
+            )),
         uiOutput('home_page')
       ),
       tabItem(

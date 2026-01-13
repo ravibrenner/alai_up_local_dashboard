@@ -53,7 +53,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       "<span style='color: #FE5000; font-size: 36px;'>", 
       pwh_count, 
       "</span> people with HIV received care at ", 
-      get_user_for_dataset(selected_site), 
+      selected_site, 
       " in ", selected_year()
     ))
   })
@@ -105,7 +105,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1_plot <- renderPlot({
     base_size <- 14
     
-    title_text = str_c("PWH at ", get_user_for_dataset(selected_site),
+    title_text = str_c("PWH at ", selected_site,
                        " active in ",selected_year(),
                        " by key populations")
     caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
@@ -125,12 +125,6 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
              pct = count/n,
              bar_text = str_c(round(100*pct,0),"%"),
              axis_text = str_c(key_pop," (",count," out of ",n," PWH)")) 
-    
-    if (selected_site == "SCC (Orlando, FL)"){
-      temp <- temp |> 
-        filter(key_pop != "Transgender/nonbinary")
-    } else {
-    }
     
     p <- temp |>
       ggplot(aes(x = 100*pct,y = axis_text)) + 
@@ -226,7 +220,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1b_plot <- renderPlot({
     base_size <- 14
     
-    title_text = str_c("PWH at ", get_user_for_dataset(selected_site),
+    title_text = str_c("PWH at ", selected_site,
                        " active in ",selected_year(),
                        " by key populations")
     caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
@@ -250,12 +244,6 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
              pct = count/n,
              bar_text = str_c(round(100*pct,0),"%"),
              axis_text = str_c(ever_on_cab," (",count," out of ",n," PWH)")) 
-    
-    if (selected_site == "SCC (Orlando, FL)"){
-      temp <- temp |> 
-        filter(key_pop != "Transgender/nonbinary")
-    } else {
-    }
     
     p <- temp |>
       ggplot(aes(x = 100*pct,y = axis_text)) + 
@@ -517,7 +505,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       assessed_count, 
       "</span> people were assessed out of ",
       pwh_count," people with HIV who received care at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " in ", selected_year()
     ))
   })
@@ -630,7 +618,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       educated_count, 
       "</span> people were educated out of ",
       pwh_count," people with HIV who received care at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " in ", selected_year()
     ))
   })
@@ -741,7 +729,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       interested_count, 
       "</span> people were interested out of ",
       educated_count," people educated at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " among PWH active in ", selected_year()
     ))
   })
@@ -884,7 +872,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       screened_count, 
       "</span> people were screened out of ",
       pwh_count," people with HIV who received care at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " in ", selected_year()
     ))
   })
@@ -994,7 +982,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       eligible_count, 
       "</span> people were eligible out of ",
       assessed_count," people assessed at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " among PWH active in ", selected_year()
     ))
   })
@@ -1133,7 +1121,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       prescribed_count, 
       "</span> people were prescribed out of ",
       interested_eligible_count," people eligible & interested at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " among PWH active in ", selected_year()
     ))
   })
@@ -1214,7 +1202,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       initiated_count, 
       "</span> people were initiated out of ",
       prescribed_count," people prescribed at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " among PWH active in ", selected_year()
     ))
   })
@@ -1296,7 +1284,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       sustained_count, 
       "</span> people were sustained out of ",
       initiated_count," people initiated at ", 
-      get_user_for_dataset(selected_site),  
+      selected_site,  
       " among PWH active in ", selected_year()
     ))
   })

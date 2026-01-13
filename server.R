@@ -11,101 +11,49 @@ source("server scripts/render_scroll_page.R")
 source("server scripts/help_text.R")
 
 
-user_base <- read_csv("data/passwords.csv",
-                      show_col_types = F) |>
-  mutate(password_hash = map_chr(password_hash,\(x) sodium::password_store(x)))
 
-# loading in the master dataset and processing it 
-raw_data <- read_csv("data/combined_data_for_dashboard_2026-01-07.csv",
-                     col_types = cols(.default = col_character()),
-                     show_col_types = F,
-                     na = c("NA","UNK", ".", "C","888888","999999")) |>
-  load_and_process_data()
 
 server <- function(input, output, session) {
   
-  # log in/logout section
-  logout_init <- reactiveVal(FALSE)
+  observeEvent(input$file1, {
+    file_path <- input$file1$datapath
+    
+    # Get all sheet names from the uploaded Excel file
+    sheet_names <- excel_sheets(file_path)
+    
+    # Dynamically update the 'select_sheet' input with the found names
+    updateSelectInput(session, 
+                      inputId = "select_sheet", 
+                      choices = sheet_names,
+                      selected = sheet_names[1] # Automatically select the first sheet
+    )
+  })
   
-  credentials <- shinyauthr::loginServer(
-    id = "login",
-    data = user_base,
-    user_col = user,
-    pwd_col = password_hash,
-    sodium_hashed = TRUE,
-    log_out = reactive(logout_init())
-  )
+  observe({
+    file_ready <- !is.null(input$file1)
+    name_ready <- !is.null(input$site_name_input) && input$site_name_input != ""
+    if (file_ready && name_ready){
+      enable("go_button")
+    } else {
+      disable("go_button")
+    }
+  })
   
-  logout_init <- shinyauthr::logoutServer(
-    id = "logout",
-    active = reactive(credentials()$user_auth)
-  )
-  
-  user_info <- reactive({
-    credentials()$info
+  # loading in the master dataset and processing it 
+  raw_data <- eventReactive(input$go_button, {
+    req(input$file1,input$select_sheet)
+    
+    read_excel(input$file1$datapath,
+               sheet = input$select_sheet,
+               col_types = "text",
+               na = c("NA","UNK", ".", "C","888888","999999")) |>
+      load_and_process_data()
   })
   
   output$home_page <-  renderUI({
-    req(credentials()$user_auth)
+    # req(input$file1)
     source(file='ui scripts/home.R', local= T)$value
   })
-  
-  # site choice options
-  output$site_choice <- renderUI({
-    req(credentials()$user_auth)
-    selectInput("dataset", "Choose one of the sites below:",
-                choices = c("All ALAI UP Sites",
-                            "AP (Dallas, TX)",
-                            "BCHD (Baltimore, MD)",
-                            "CFHC (Biloxi, MS)",
-                            "JMFC (New York, NY)",
-                            "PIHC (Decatur, GA)",
-                            "SAAF (San Antonio, TX)",
-                            "SCC (Orlando, FL)",
-                            "SIDC (Chicago, IL)"
-                ),
-                selected="All ALAI UP Sites")
-  })
-  
-  # site choice options updater
-  observe({
-    req(credentials()$user_auth)
-    if (user_info()$permissions == "admin") {
-      updateSelectInput(session, "dataset",
-                        choices = c("All ALAI UP Sites",
-                                    "AP (Dallas, TX)",
-                                    "BCHD (Baltimore, MD)",
-                                    "CFHC (Biloxi, MS)",
-                                    "JMFC (New York, NY)",
-                                    "PIHC (Decatur, GA)",
-                                    "SAAF (San Antonio, TX)",
-                                    "SCC (Orlando, FL)",
-                                    "SIDC (Chicago, IL)"
-                        ),
-                        selected="All ALAI UP Sites")
-    } else if (user_info()$permissions == "shared"){
-      updateSelectInput(session, "dataset",
-                        choices = c("All ALAI UP Sites",
-                                    # "AP (Dallas, TX)",
-                                    "BCHD (Baltimore, MD)",
-                                    "CFHC (Biloxi, MS)",
-                                    # "JMFC (New York, NY)",
-                                    "PIHC (Decatur, GA)",
-                                    "SAAF (San Antonio, TX)",
-                                    # "SCC (Orlando, FL)",
-                                    "SIDC (Chicago, IL)"
-                        ),
-                        selected=get_user_for_login(user_info()$site))
-    } else {
-      site_choices <- c(get_user_for_login(user_info()$site), "All ALAI UP Sites")
-      updateSelectInput(session, "dataset",
-                        choices = site_choices,
-                        selected = site_choices[[1]])
-    } 
-  })
-
-  
-  
   
   df <- reactiveVal()
   tbl <- reactiveVal()
@@ -130,12 +78,9 @@ server <- function(input, output, session) {
   })
   
   
-  observeEvent(user_info()$permissions, {
-    user <- user_info()
-    observeEvent(input$dataset, {
-      df(filter_data_by_site(raw_data, get_dataset_for_user(input$dataset)))
-      selected_site(input$dataset)
-    })
+  observeEvent(input$go_button, {
+    df(raw_data())
+    selected_site(input$site_name_input)
   })
   
   cab_master_df <- reactive({
@@ -158,10 +103,19 @@ server <- function(input, output, session) {
   })
   
   observeEvent(df(), {
-    tbl(get_current_year_data(df(), as.numeric(2025)))
-    ic_summary_df(prepare_ic_summary(tbl()))
-
-    update_app()
+    withProgress(expr = {
+      tbl(get_current_year_data(df(), as.numeric(2025)))
+      ic_summary_df(prepare_ic_summary(tbl()))
+      
+      update_app()
+    },
+    message = "Processing data",
+    detail = "This may take a moment...",
+    value = 0)
+    
+    updateActionButton(session, "go_button",
+                       label = "Data is ready",
+                       icon = icon("check"))
   })
   
   observeEvent(cab_master_df(), {
@@ -194,7 +148,7 @@ server <- function(input, output, session) {
   })
   
   output$indicator <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     selectInput("indicator",
                 "Select an indicator",
                 c("Demographics",
@@ -212,7 +166,7 @@ server <- function(input, output, session) {
   
   # RENDER grouping_var UI
   output$grouping_var <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     selectInput("grouping_var", 
                 "Comparison variable", 
                 choices = c("Age" = "age_cat",
@@ -242,7 +196,7 @@ server <- function(input, output, session) {
   
   # RENDER filter_var UI
   output$filter_var_ui <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     req(input$grouping_var)  # depends on this being ready
     selectInput("filter_var", "Filter by", choices = NULL)
   })
@@ -290,7 +244,7 @@ server <- function(input, output, session) {
     
     # Render the checkbox group input
     output$filter_select <- renderUI({
-      req(credentials()$user_auth)
+      req(input$file1)
       req(filter_options())
       
       checkboxGroupInput("filter_select",
@@ -302,12 +256,12 @@ server <- function(input, output, session) {
   
   
   output$filter_by_year <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     checkboxInput('filter_by_year',label = "Filter time period",value = FALSE)
   })
   
   output$active_year_choice <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     selectInput("active_year", "Active year of patients",
                 choices = c(2021,2022,2023,2024,2025),
                 selected=2025)
@@ -348,7 +302,7 @@ server <- function(input, output, session) {
   })
   
   output$date_filter_ui <- renderUI({
-    req(credentials()$user_auth, computed_end_date())
+    req(input$file1, computed_end_date())
     
     dateRangeInput(
       inputId = 'date_filter',
@@ -363,7 +317,7 @@ server <- function(input, output, session) {
 
   
   output$data_explore_page <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     req(input$grouping_var)
     req(input$filter_var)
     req(input$filter_select)
@@ -385,7 +339,7 @@ server <- function(input, output, session) {
   )
   
   output$demographics_page <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     
     fluidPage(
       fluidRow(
@@ -455,7 +409,7 @@ server <- function(input, output, session) {
   )
   
   output$demo_by_lai <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     
     fluidPage(
       fluidRow(
@@ -521,7 +475,7 @@ server <- function(input, output, session) {
   )
   
   output$lai_overview <- renderUI({
-    req(credentials()$user_auth)
+    req(input$file1)
     
     fluidPage(
       fluidRow(
@@ -613,7 +567,7 @@ server <- function(input, output, session) {
 
   # Assessed
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "assessed_page",
     sections_info = assessed_sections_info,
     n_output_id = "assessed_n"
@@ -635,7 +589,7 @@ server <- function(input, output, session) {
   
   # Educated
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "educated_page",
     sections_info = educated_sections_info,
     n_output_id = "educated_n"
@@ -658,7 +612,7 @@ server <- function(input, output, session) {
   
   # interested
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "interested_page",
     sections_info = interested_sections_info,
     n_output_id = "interested_n"
@@ -680,7 +634,7 @@ server <- function(input, output, session) {
   
   # screened
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "screened_page",
     sections_info = screened_sections_info,
     n_output_id = "screened_n"
@@ -703,7 +657,7 @@ server <- function(input, output, session) {
   
   # eligible
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "eligible_page",
     sections_info = eligible_sections_info,
     n_output_id = "eligible_n"
@@ -724,7 +678,7 @@ server <- function(input, output, session) {
   
   # prescribed
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "prescribed_page",
     sections_info = prescribed_sections_info,
     n_output_id = "prescribed_n"
@@ -745,7 +699,7 @@ server <- function(input, output, session) {
   
   # initiated
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "initiated_page",
     sections_info = initiated_sections_info,
     n_output_id = "initiated_n"
@@ -767,7 +721,7 @@ server <- function(input, output, session) {
   
   # sustained
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "sustained_page",
     sections_info = sustained_sections_info,
     n_output_id = "sustained_n"
@@ -783,7 +737,7 @@ server <- function(input, output, session) {
   )
   
   renderSectionPage(
-    input, output, credentials,
+    input, output, 
     page_id = "inj_page",
     sections_info = clinical_sections_info,
     n_output_id = "clinical_n"
@@ -819,7 +773,7 @@ server <- function(input, output, session) {
   
   observe({
     renderSectionPage(
-      input, output, credentials,
+      input, output, 
       page_id = "vl_page",
       sections_info = vl_sections_info(),  
       n_output_id = "vl_n"
