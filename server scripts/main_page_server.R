@@ -337,7 +337,6 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     base_size <- 14
     
     ic_df <- ic_summary_df |>
-      filter(site != "Harlem") |>
       group_by(site, Variable) |>
       summarise(Value=sum(Value,na.rm = T)) |>
       arrange(match(Variable,c('PWH', 'Assessed','Educated',
@@ -377,7 +376,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
              x_lab = fct_reorder(x_lab,x_order))
     
     bar_names <- ic_df$x_lab[-1]
-    max_y = max(ic_df$high_pct,na.rm = T)
+    max_y = max(ic_df$Percent,na.rm = T)
     text_size = base_size / 2.5
     
     # size goal: base size 12. text size 4.8. axis text size 18 (12*1.5)

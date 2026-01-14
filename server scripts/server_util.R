@@ -127,6 +127,45 @@ load_and_process_data <- function(input_df) {
     mutate(icab_rpv_discontinued_date = coalesce(icab_rpv_discontinued_date.x, icab_rpv_discontinued_date.y)) |>
     select(-icab_rpv_discontinued_date.x, -icab_rpv_discontinued_date.y)
   
+  disc_dates2 <- df |>
+    filter(is.na(icab_rpv_discontinued) &
+             (!is.na(icab_rpv_shot1_date) | !is.na(icab_rpv_shot2_date))) |> 
+    select(alai_up_uid, contains("icab_rpv")) |>
+    pivot_longer(cols = contains("icab_rpv_shot")&contains("date"),
+                 names_to = "index",
+                 values_to = "date") |> 
+    filter(.by = alai_up_uid,
+           date == last(date, na_rm = T)) |>
+    mutate(icab_rpv_discontinued = case_when(
+      # TODO this date is hard coded but we need a more flexible solution
+      # Either an input or an autodetected date could work
+      date + days(90) < as.Date("2025-08-31") ~ "1",
+      .default = "0"
+    ),
+    icab_rpv_discontinued_date = case_when(
+      icab_rpv_discontinued == "1" ~ date,
+      .default = icab_rpv_discontinued_date
+    ),
+    icab_rpv_discontinued_reason = case_when(
+      icab_rpv_discontinued == "1" ~ "No dose in >90 days",
+      .default = icab_rpv_discontinued_reason
+    )) |>
+    select(alai_up_uid, icab_rpv_discontinued,icab_rpv_discontinued_date,
+           icab_rpv_discontinued_reason)
+  
+  df <- df |>
+    full_join(disc_dates2, by = "alai_up_uid") |>
+    mutate(icab_rpv_discontinued_date = coalesce(icab_rpv_discontinued_date.x, icab_rpv_discontinued_date.y),
+           icab_rpv_discontinued = coalesce(icab_rpv_discontinued.x,
+                                            icab_rpv_discontinued.y),
+           icab_rpv_discontinued_reason = coalesce(icab_rpv_discontinued_reason.x,
+                                                   icab_rpv_discontinued_reason.y)) |>
+    select(-icab_rpv_discontinued_date.x, -icab_rpv_discontinued_date.y,
+           -icab_rpv_discontinued.x,-icab_rpv_discontinued.y,
+           -icab_rpv_discontinued_reason.x,-icab_rpv_discontinued_reason.y) |>
+    mutate(icab_rpv_discontinued_date = if_else(icab_rpv_discontinued == 0,NA,
+                                                icab_rpv_discontinued_date))
+  
   return(df)
 }
 
@@ -692,6 +731,7 @@ key_pop_var_plot <- function(input_df, in_var,
   df_msm <- process_key_pop(input_df, risk_msm == 1, "MSM")
   df_idu <- process_key_pop(input_df, risk_idu == 1, "IDU")
   df_tg  <- process_key_pop(input_df, gender_id %in% c(3, 4, 5), "Transgender/nonbinary")
+  temp <- bind_rows(df_msm, df_idu, df_tg)
   
   max_x = max(temp$Percent,na.rm=T)
   x_lim = max(1.15,max_x+0.15)
@@ -1049,6 +1089,7 @@ discontinued_reason_func <- function(input_df, base_size_in){
         icab_rpv_discontinued_reason == 9 ~ "Switched out of clinic",
         icab_rpv_discontinued_reason == 10 ~ "Change/loss of insurance/payor",
         icab_rpv_discontinued_reason == 20 ~ "Other",
+        icab_rpv_discontinued_reason == "No dose in >90 days" ~ icab_rpv_discontinued_reason,
         .default = "Unknown"),
       levels = c("Satisfaction with previous regimen",
                  "Fear/dislike of needles",
@@ -1061,6 +1102,7 @@ discontinued_reason_func <- function(input_df, base_size_in){
                  "Switched out of clinic",
                  "Change/loss of insurance/payor",
                  "Other",
+                 "No dose in >90 days",
                  "Unknown")
     )) |>
     filter(icab_rpv_discontinued == 1) |>
