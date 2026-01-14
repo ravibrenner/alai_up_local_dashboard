@@ -110,8 +110,7 @@ server <- function(input, output, session) {
       update_app()
     },
     message = "Processing data",
-    detail = "This may take a moment...",
-    value = 0)
+    detail = "This may take a moment...")
     
     updateActionButton(session, "go_button",
                        label = "Data is ready",
@@ -364,6 +363,17 @@ server <- function(input, output, session) {
               status = "info",
               solidHeader = TRUE,
               help_text$info1),
+          # Box for the map
+          box(id = "map_box",
+              title = "ZIP codes",
+              width = 12,
+              status = "primary",
+              solidHeader = TRUE,
+              actionButton("render_map_button",
+                           label = "Create map",
+                           icon = icon("play")),
+              leafletOutput("zip_map"),
+              downloadButton(outputId = "map_data_download", label = "Download data")),
           # Plot boxes
           map(demo_sections_info[-1], function(section) {
             box(

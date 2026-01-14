@@ -58,6 +58,41 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     ))
   })
 
+  map_data <- eventReactive(input$render_map_button, {
+    withProgress(message = "Preparing map...", {
+      zip_counts <- tbl |>
+        group_by(zip_code) |>
+        count()
+      
+      zip_geom <- tigris::zctas(starts_with = zip_counts$zip_code)
+      
+      zip_counts <- zip_counts |>
+        ungroup() |>
+        inner_join(zip_geom |> select(ZCTA5CE20, geometry),
+                    by = join_by(zip_code == ZCTA5CE20)) |>
+        sf::st_as_sf()
+      
+      pal <- colorBin("magma", domain = zip_counts$n,
+                      bins = 5, pretty = TRUE)
+      
+      output$map_data_download <- download_table("zip_code_count", 
+                                                 zip_counts |> 
+                                                   sf::st_drop_geometry() |>
+                                                   arrange(-n))
+      
+      return(leaflet(zip_counts) |>
+               addProviderTiles(providers$CartoDB.Positron) |>
+               addPolygons(fillColor = ~pal(n),
+                           color = "gray",
+                           weight = 1,
+                           label = ~str_c(zip_code,": ",n," people")))
+    })
+  })
+  
+  output$zip_map <- renderLeaflet({
+    map_data()
+  })
+  
   demo_sections <- list(
     sex1       = list(var = "sex_birth",        label = "sex_demographics"),
     race1      = list(var = "race",             label = "race_demographics"),

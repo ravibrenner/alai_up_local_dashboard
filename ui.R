@@ -1,6 +1,5 @@
 library(shiny)
 library(shinydashboard)
-library(shinyauthr)
 library(shinyjs)
 library(bslib)
 library(tidyverse)
@@ -10,6 +9,7 @@ library(showtext)
 library(ggpubr)
 library(gt)
 library(ggsurvfit)
+library(leaflet)
 
 ui <- dashboardPage(
   dashboardHeader(
@@ -25,6 +25,10 @@ ui <- dashboardPage(
     width = 300,
     sidebarMenu(id='sidebar',
                 menuItem(strong("Home"), tabName= 'home'),
+                radioButtons("assessed_choice",
+                             label = "Is Counseling/Screening consistently recorded? (This button currently does nothing)",
+                             choices = c("Yes","No"),
+                             selected = "Yes"),
                 menuItem(text = strong("Clinic Demographics"),
                          tabName = 'demographics_header',
                          menuItem(text = "Overall",
