@@ -84,13 +84,14 @@ server <- function(input, output, session) {
   })
   
   cab_master_df <- reactive({
-    req(tbl(), interval_1(), interval_2())
-    prepare_cab_master_df(tbl(), interval_1(), interval_2())
+    req(filtered_tbl(), interval_1(), interval_2())
+    prepare_cab_master_df(filtered_tbl(), interval_1(), interval_2())
   })
   
   filtered_tbl <- reactive({
-    req(df())
-    if (length(input$date_filter) == 2 &!is.null(input$active_year)) {
+    req(tbl())
+    if (input$filter_by_year == TRUE &&
+        length(input$date_filter) == 2 & !is.null(input$active_year)) {
       get_current_year_data(df(),
                             as.numeric(input$active_year),
                             filter_dates = TRUE,
@@ -104,10 +105,11 @@ server <- function(input, output, session) {
   
   observeEvent(df(), {
     withProgress(expr = {
-      tbl(get_current_year_data(df(), as.numeric(2025)))
+      tbl(df())
       ic_summary_df(prepare_ic_summary(tbl()))
       
       update_app()
+      
     },
     message = "Processing data",
     detail = "This may take a moment...")
@@ -128,8 +130,8 @@ server <- function(input, output, session) {
   })
   
   update_app <- function() {
-    main_page_server(input, output, tbl(), ic_summary_df(), selected_site(), cab_master_df(), session)
-    dynamic_filter_select(input, output, ic_summary_df(), selected_site(), session)
+    main_page_server(input, output, filtered_tbl(), filtered_ic_summary_df(), selected_site(), cab_master_df(), session)
+    dynamic_filter_select(input, output, filtered_ic_summary_df(), selected_site(), session)
   }
   
   

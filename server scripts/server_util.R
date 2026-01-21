@@ -1028,7 +1028,9 @@ not_interested_reason_func <- function(input_df, base_size_in){
             axis.text.x = element_blank(),
             panel.grid = element_blank(),
             axis.ticks = element_blank(),
-            axis.line = element_blank())
+            axis.line = element_blank(),
+            plot.caption.position = "plot",
+            plot.caption = element_text(hjust = 0))
   }
 }
 
@@ -1121,7 +1123,9 @@ not_eligible_reason_func <- function(input_df,base_size_in){
           axis.text.x = element_blank(),
           panel.grid = element_blank(),
           axis.ticks = element_blank(),
-          axis.line = element_blank())
+          axis.line = element_blank(),
+          plot.caption.position = "plot",
+          plot.caption = element_text(hjust = 0))
 }
 
 discontinued_reason_func <- function(input_df, base_size_in){
@@ -1175,6 +1179,21 @@ discontinued_reason_func <- function(input_df, base_size_in){
       labels = fct_rev(fct_infreq(labels, w = n))
     ) 
   
+  # Get "other" reasons
+  other_df <-  input_df |>
+    filter(!is.na(icab_rpv_shot1_date) | 
+             !is.na(icab_rpv_shot2_date),
+           icab_rpv_discontinued == 1) |>
+    group_by(icab_rpv_discontinued_reason_other) |>
+    count() |>
+    drop_na() |>
+    arrange(-n) |>
+    mutate(text = str_c(icab_rpv_discontinued_reason_other," (",n,")"))
+  
+  other_reason_list <- other_df |>
+    pull(text) |>
+    str_c(collapse = ", ")
+  
   discont_reason |>
     ggplot(aes(y = labels, x = percent, fill = factor(icab_rpv_discontinued_reason))) + 
     geom_col() +
@@ -1183,7 +1202,11 @@ discontinued_reason_func <- function(input_df, base_size_in){
               vjust = 0.5,hjust = -0.1,
               size=text_size, fontface = "bold",
               family = "Roboto") +
-    labs(y = NULL, x = NULL) +
+    labs(y = NULL, x = NULL,
+         caption = str_wrap(
+           str_c("Other reasons listed include: ", other_reason_list),
+           120
+         )) +
     scale_x_continuous(labels = scales::percent, breaks = seq(0, 1, 0.1),
                        limits = c(0,1.1)) +
     theme_minimal(base_size = base_size,
@@ -1193,7 +1216,9 @@ discontinued_reason_func <- function(input_df, base_size_in){
           axis.text.x = element_blank(),
           panel.grid = element_blank(),
           axis.ticks = element_blank(),
-          axis.line = element_blank())
+          axis.line = element_blank(),
+          plot.caption.position = "plot",
+          plot.caption = element_text(hjust = 0))
 }
 
 prepare_cab_master_df <- function(input_df, interval_1, interval_2){

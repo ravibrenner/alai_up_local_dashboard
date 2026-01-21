@@ -81,12 +81,12 @@ ui <- dashboardPage(
                       selectInput("filter_var",
                                   "Filter variable",
                                   choices = NULL),
-                      uiOutput("filter_select"),
-                      uiOutput('filter_by_year'),
-                      conditionalPanel("input.filter_by_year === true",
-                                       uiOutput('active_year_choice'),
-                                       uiOutput('date_filter_ui')),
-                    ))
+                      uiOutput("filter_select")),
+                    uiOutput('filter_by_year'),
+                    conditionalPanel("input.filter_by_year === true",
+                                     uiOutput('active_year_choice'),
+                                     uiOutput('date_filter_ui')),
+                )
                 
     )
   ),
