@@ -425,15 +425,23 @@ get_IC_df <-function(input_df){
     )
   
   disinterest_df <- input_df |>
-    select(alai_up_uid, contains("icab_rpv_disinterest")&contains("reason")
-           &!contains("other")) |>
-    pivot_longer(cols = matches("icab_rpv_disinterest.*reason(?!.*other)",perl = T),
-                 names_to = "dis_event", values_to = "dis_outcome") |>
+    select(alai_up_uid, contains("icab_rpv_disinterest")&contains("reason")) |>
+    rename_with(~paste0(., "_dis_outcome"), !contains("_other") & contains("reason")) |>
+    pivot_longer(
+      cols = contains("disinterest")&contains("reason"),
+      names_to = c("event_base", ".value"),
+      names_pattern = "(.*reason_\\d+)_(dis_outcome|other)"
+    ) |>
     group_by(alai_up_uid) |>
     summarize(
       disinterest_reason = {
-        val <- dplyr::last(dis_outcome,na_rm = T)
+        val <- last(dis_outcome,na_rm = T)
         data.table::fifelse(is.null(val),NA_real_,as.numeric(val))
+      }, 
+      disinterest_other_reason = {
+        val <- dplyr::last(dis_outcome,na_rm = T)
+        event = other[max(which(!is.na(dis_outcome)))]
+        data.table::fifelse(val == 20, event, NA_character_)
       },
       .groups = "drop"
     )
@@ -454,14 +462,21 @@ get_IC_df <-function(input_df){
   
   # STEP 5: Not Eligible Reason
   not_elig_df <- input_df |>   
-    select(alai_up_uid, contains("icab_rpv_not_elig")&contains("reason")
-           &!contains("oth")) |>
-    pivot_longer(cols = matches("icab_rpv_not_elig.*reason(?!.*oth)",perl = T),
-                 names_to = "not_elig_event", values_to = "not_elig_outcome") |> 
+    select(alai_up_uid, contains("icab_rpv_not_elig")&contains("reason")) |>
+    rename_with(~paste0(., "_not_elig_outcome"), !contains("_oth") & contains("reason")) |>
+    rename_with(~paste0(.,"er"), contains("oth") & !contains("other")) |> 
+    pivot_longer(cols = contains("not_elig"),
+                 names_to = c("event_base",".value"),
+                 names_pattern = "(.*)_(not_elig_outcome|other)") |> 
     mutate(not_elig_outcome = str_replace(not_elig_outcome,"NA",NA_character_)) |>
     group_by(alai_up_uid) |>
     summarise(
       not_elig_reason =dplyr::last(not_elig_outcome,na_rm = T),
+      not_elig_other_reason = {
+        val <- dplyr::last(not_elig_outcome,na_rm = T)
+        event = other[max(which(!is.na(not_elig_outcome)))]
+        data.table::fifelse(val == 20, event, NA_character_)
+      },
       .groups = "drop"
     )
   
@@ -935,7 +950,9 @@ not_interested_reason_func <- function(input_df, base_size_in){
   base_size <- base_size_in # set dynamically
   text_size <- base_size / 2.5
   
-  disinterest_df <- get_IC_df(input_df) |>
+  ic_df <- get_IC_df(input_df)
+  
+  disinterest_df <- ic_df |>
     mutate(disinterest_reason = factor(
       case_when(
         disinterest_reason == 1 ~ "Satisfaction with current regimen",
@@ -970,6 +987,21 @@ not_interested_reason_func <- function(input_df, base_size_in){
       labels = fct_rev(fct_infreq(labels, w = n))
     ) 
   
+  # Get "other" reasons
+  other_df <- ic_df |>
+    filter(Educated == 1,
+           Interested==0 | Interested == 2,
+           disinterest_reason == 20) |>
+    group_by(disinterest_other_reason) |>
+    count() |>
+    drop_na() |>
+    arrange(-n) |>
+    mutate(text = str_c(disinterest_other_reason," (",n,")"))
+  
+  other_reason_list <- other_df |>
+    pull(text) |>
+    str_c(collapse = ", ")
+    
   
   if (nrow(disinterest_df)==0){
     
@@ -982,7 +1014,11 @@ not_interested_reason_func <- function(input_df, base_size_in){
                 vjust = 0.5,hjust = -0.1,
                 size=text_size, fontface = "bold",
                 family = "Roboto") +
-      labs(y = NULL, x = NULL) +
+      labs(y = NULL, x = NULL,
+           caption = str_wrap(
+             str_c("Other reasons listed include: ", other_reason_list),
+             120
+           )) +
       scale_x_continuous(labels = scales::percent, breaks = seq(0, 1, 0.1),
                          limits = c(0,1)) +
       theme_minimal(base_size = base_size,
@@ -1001,7 +1037,9 @@ not_eligible_reason_func <- function(input_df,base_size_in){
   base_size <- base_size_in # set dynamically
   text_size <- base_size / 2.5
   
-  not_elig_df <- get_IC_df(input_df) |>
+  ic_df <- get_IC_df(input_df)
+  
+  not_elig_df <- ic_df |>
     mutate(not_elig_reason = str_split(not_elig_reason, ",")) |> 
     unnest(not_elig_reason) |>
     mutate(not_elig_reason = factor(
@@ -1046,6 +1084,20 @@ not_eligible_reason_func <- function(input_df,base_size_in){
       labels = fct_rev(fct_infreq(labels, w = n))
     ) 
   
+  # Get "other" reasons
+  other_df <- ic_df |>
+    filter(Assessed == 1,
+           Eligible==0,
+           not_elig_reason == 20) |>
+    group_by(not_elig_other_reason) |>
+    count() |>
+    drop_na() |>
+    arrange(-n) |>
+    mutate(text = str_c(not_elig_other_reason," (",n,")"))
+  
+  other_reason_list <- other_df |>
+    pull(text) |>
+    str_c(collapse = ", ")
   
   not_elig_df |>
     ggplot(aes(y = labels, x = percent, fill = factor(not_elig_reason))) + 
@@ -1055,7 +1107,11 @@ not_eligible_reason_func <- function(input_df,base_size_in){
               vjust = 0.5,hjust = -0.1,
               size=text_size, fontface = "bold",
               family = "Roboto") +
-    labs(y = NULL, x = NULL) +
+    labs(y = NULL, x = NULL,
+         caption = str_wrap(
+           str_c("Other reasons listed include: ", other_reason_list),
+           120
+         )) +
     scale_x_continuous(labels = scales::percent, breaks = seq(0, 1, 0.1),
                        limits = c(0,1)) +
     theme_minimal(base_size = base_size,
