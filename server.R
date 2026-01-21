@@ -55,11 +55,6 @@ server <- function(input, output, session) {
     source(file='ui scripts/home.R', local= T)$value
   })
   
-  df <- reactiveVal()
-  tbl <- reactiveVal()
-  ic_summary_df <- reactiveVal()
-  filtered_ic_summary_df <- reactiveVal()
-  selected_site <- reactiveVal()
   
   interval_1 <- reactive({
     if (input$ontime_target_input == "4 or 8 weeks") {
@@ -77,19 +72,16 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  observeEvent(input$go_button, {
-    df(raw_data())
-    selected_site(input$site_name_input)
+  df <- eventReactive(input$go_button, {
+    withProgress(message = "Processing data",
+                 detail = "This may take a moment...",
+                 {
+                   raw_data()
+                 })
   })
   
-  cab_master_df <- reactive({
-    req(filtered_tbl(), interval_1(), interval_2())
-    prepare_cab_master_df(filtered_tbl(), interval_1(), interval_2())
-  })
-  
-  filtered_tbl <- reactive({
-    req(tbl())
+  tbl <- reactive({
+    req(df())
     if (input$filter_by_year == TRUE &&
         length(input$date_filter) == 2 & !is.null(input$active_year)) {
       get_current_year_data(df(),
@@ -99,40 +91,36 @@ server <- function(input, output, session) {
                             end_date = as.Date(input$date_filter[2]))
     }
     else {
-      tbl()  # fallback if no date range selected
+      df()  # fallback if no date range selected
     }
   })
   
-  observeEvent(df(), {
-    withProgress(expr = {
-      tbl(df())
-      ic_summary_df(prepare_ic_summary(tbl()))
-      
-      update_app()
-      
-    },
-    message = "Processing data",
-    detail = "This may take a moment...")
+  cab_master_df <- reactive({
+    req(tbl(), interval_1(), interval_2())
+    prepare_cab_master_df(tbl(), interval_1(), interval_2())
+  })
+  
+  ic_summary_df <- reactive({
+    req(tbl())
+    prepare_ic_summary(tbl())
     
+    
+  })
+
+  observeEvent(ic_summary_df(),{
     updateActionButton(session, "go_button",
                        label = "Data is ready",
                        icon = icon("check"))
   })
   
-  observeEvent(cab_master_df(), {
-    update_app()
-  })
-  
-  observeEvent(filtered_tbl(), {
-    filtered_ic_summary_df(prepare_ic_summary(filtered_tbl()))
+  observe({
+    req(tbl(), ic_summary_df(), cab_master_df())
+    
+      main_page_server(input, output, tbl(), ic_summary_df(), input$site_name_input, cab_master_df(), session)
+      dynamic_filter_select(input, output, ic_summary_df(), input$site_name_input, session)
+      data_explore_server(input, output, ic_summary_df(), session)
 
-    data_explore_server(input, output, filtered_ic_summary_df(), session)
   })
-  
-  update_app <- function() {
-    main_page_server(input, output, filtered_tbl(), filtered_ic_summary_df(), selected_site(), cab_master_df(), session)
-    dynamic_filter_select(input, output, filtered_ic_summary_df(), selected_site(), session)
-  }
   
   
   
