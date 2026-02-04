@@ -1921,7 +1921,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       ) +
       labs(x = str_c("Days since VL ",val1()," (number contributing data)"),
            y = NULL,
-           title = str_c("Estimated time of first VL ",val2(),", among those with pre-CAB VL ,",val1()),
+           title = str_c("Estimated time of first VL ",val2(),", among those with pre-CAB VL ",val1()),
            caption = str_wrap("Percentages at each time point are estimated using the Kaplan-Meier survival function, accounting for uncertainty due to (1) people who discontinue and (2) people who have not accrued enough time on CAB yet.",120)) + 
       scale_y_continuous(labels = scales::label_percent(accuracy = 1),
                          limits = c(0,1)) +
@@ -2022,7 +2022,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       ) +
       labs(x = str_c("Days since VL ",val1()," (number contributing data)"),
            y = NULL,
-           title = str_c("Estimated time of first VL ",val2(),", among those with pre-CAB VL ,",val2()),
+           title = str_c("Estimated time of first VL ",val2(),", among those with pre-CAB VL ",val2()),
            caption = str_wrap("Percentages at each time point are estimated using the Kaplan-Meier survival function, accounting for uncertainty due to (1) people who discontinue and (2) people who have not accrued enough time on CAB yet.",120)) + 
       scale_y_continuous(labels = scales::label_percent(accuracy = 1),
                          limits = c(0,1)) +

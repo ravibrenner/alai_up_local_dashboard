@@ -1,8 +1,10 @@
 
 options(dplyr.summarise.inform = FALSE)
+options(shiny.maxRequestSize = 30 * 1024^2)
 theme_set(theme_minimal())
-font_add_google(name = "Roboto", family = "Roboto")
+font_add(family = "Roboto", regular = "Roboto-Regular.ttf", bold = "Roboto-Bold.ttf")
 showtext_auto()
+showtext_opts(dpi = 96)
 
 source("server scripts/main_page_server.R")
 source("server scripts/data_explore_server.R")
@@ -17,13 +19,13 @@ server <- function(input, output, session) {
   
   observeEvent(input$file1, {
     file_path <- input$file1$datapath
-    
+
     # Get all sheet names from the uploaded Excel file
     sheet_names <- excel_sheets(file_path)
-    
+
     # Dynamically update the 'select_sheet' input with the found names
-    updateSelectInput(session, 
-                      inputId = "select_sheet", 
+    updateSelectInput(session,
+                      inputId = "select_sheet",
                       choices = sheet_names,
                       selected = sheet_names[1] # Automatically select the first sheet
     )
@@ -55,7 +57,7 @@ server <- function(input, output, session) {
     source(file='ui scripts/home.R', local= T)$value
   })
   
-  
+
   interval_1 <- reactive({
     if (input$ontime_target_input == "4 or 8 weeks") {
       28
@@ -121,8 +123,6 @@ server <- function(input, output, session) {
       data_explore_server(input, output, ic_summary_df(), session)
 
   })
-  
-  
   
   observeEvent(input$sidebarItemExpanded, {
     if (input$sidebarItemExpanded == "<strong>LAIindicators</strong>") {

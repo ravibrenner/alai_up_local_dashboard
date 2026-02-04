@@ -2,7 +2,17 @@ library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(bslib)
-library(tidyverse)
+library(dplyr)
+library(forcats)
+library(ggplot2)
+library(hms)
+library(lubridate)
+library(magrittr)
+library(purrr)
+library(rlang)
+library(stringr)
+library(tibble)
+library(tidyr)
 library(readxl)
 library(patchwork)
 library(showtext)
@@ -10,6 +20,7 @@ library(ggpubr)
 library(gt)
 library(ggsurvfit)
 library(leaflet)
+library(munsell)
 
 ui <- dashboardPage(
   dashboardHeader(
@@ -109,7 +120,7 @@ ui <- dashboardPage(
             width = 6,
             status = "primary",
             solidHeader = TRUE,
-            fileInput("file1", "Choose Data File (.xlsx)", accept = ".xlsx"),
+            fileInput("file1", "Choose Data File (.xlsx)", accept = c(".xlsx",".xls")),
             selectInput("select_sheet","Select a sheet",choices = NULL),
             textInput("site_name_input","Site name", value = NULL),
             disabled(actionButton("go_button",
