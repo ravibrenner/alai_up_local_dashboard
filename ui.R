@@ -104,10 +104,6 @@ ui <- dashboardPage(
   dashboardBody(
     useShinyjs(),
       tags$head(
-        tags$link(
-          href = "https://fonts.googleapis.com/css2?family=Roboto&display=swap",
-          rel = "stylesheet"
-        ),
         tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
       ),
     tabItems(

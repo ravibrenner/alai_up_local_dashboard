@@ -1,8 +1,42 @@
 /* FONT */
-body, .content-wrapper, .main-header, .main-sidebar{
-  font-family: 'Roboto', sans-serif;
+/* some AI help with the fonts */
+/* 1. Define the fonts using the local files in your app folder */
+@font-face {
+  font-family: 'Roboto';
+  src: url('Roboto-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('Roboto-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* 2. Apply to all dashboard elements */
+body, 
+.content-wrapper, 
+.main-header .logo, 
+.main-sidebar, 
+.main-header .navbar {
+  font-family: 'Roboto', sans-serif !important;
   font-size: 16px;  
-  }
+}
+
+/* 3. Ensure Shiny inputs (like your Select Box) use the font too */
+.selectize-input, 
+.selectize-dropdown, 
+.form-control, 
+.btn {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* 4. Fix for Dashboard titles specifically */
+.main-header .logo {
+  font-weight: 700;
+}
 /* logo */
 .skin-blue .main-header .logo {
   background-color:#100C48;
