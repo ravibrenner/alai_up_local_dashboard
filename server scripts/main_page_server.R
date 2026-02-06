@@ -64,7 +64,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
         group_by(zip_code) |>
         count()
       
-      zip_geom <- tigris::zctas(starts_with = zip_counts$zip_code)
+      zip_geom <- sf::st_read("www/cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp") |>
+        filter(ZCTA5CE20 %in% zip_counts$zip_code)
       
       zip_counts <- zip_counts |>
         ungroup() |>
