@@ -187,13 +187,8 @@ get_current_year_data <- function(input_df, input_year,
                                   end_date = NULL) {
   #current year counts
   tbl <- input_df |>  
-    mutate(active_2021 = if_else(active_2021 == 1 | active_2021 == 2021,2021,0),
-           active_2022 = if_else(active_2022 == 1 | active_2022 == 2022,2022,0),
-           active_2023 = if_else(active_2023 == 1 | active_2023 == 2023,2023,0),
-           active_2024 = if_else(active_2024 == 1 | active_2024 == 2024,2024,0),
-           active_2025 = if_else(active_2025 == 1 | active_2025 == 2025,2025,0)) |>
-    filter(if_any(contains("active"),\(x) x == input_year))
-  
+    filter(if_any(contains("active")&contains(as.character(input_year)),
+                  \(x) x == 1))
   
   if (filter_dates == TRUE){
     tbl <- time_period_filter(tbl, start_date, end_date)
@@ -263,7 +258,8 @@ time_period_filter <- function(input_df, start_date, end_date){
 demo_plot <- function(input_df, in_col, base_size_in,
                       selected_site = NULL,
                       selected_year = NULL,
-                      by_cab_status = FALSE){
+                      by_cab_status = FALSE,
+                      input = input){
   in_col_string = in_col
   in_col = sym(in_col)
 
@@ -274,9 +270,14 @@ demo_plot <- function(input_df, in_col, base_size_in,
                     in_col_string == "insurance_status" ~ "Insurance status",
                     in_col_string == "housing_status" ~ "Housing status")
   
-  title_text = str_c("PWH at ", selected_site,
-                     " active in ",selected_year,
-                     " by ", title)
+  if (is.null(selected_year)){
+    title_text = str_c("PWH at ", selected_site,
+                       " by ", title)
+  } else {
+    title_text = str_c("PWH at ", selected_site,
+                       " active in ",selected_year,
+                       " by ", title)
+  }
   
   if (by_cab_status == FALSE){
     temp <- input_df |>
@@ -560,15 +561,29 @@ ic_var_plot <- function(input_df,
     x_lim = max(1.15,max_x+0.15)
     
     if (in_var %in% c("assessed","educated","screened")) {
-      title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(ic_df$prev_lab), 
-                         " active in ",selected_year)
+      if (is.null(selected_year)){
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab))
+      } else {
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " active in ",selected_year)
+      }
     } else {
-      title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(ic_df$prev_lab), 
-                         " PWH active in ",selected_year)
+      if (is.null(selected_year)){
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " PWH")
+      } else {
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " PWH active in ",selected_year)
+      }
+      
     }
     
     
@@ -640,17 +655,31 @@ ic_var_plot <- function(input_df,
     
     
     if (in_var %in% c("assessed","educated","screened")) {
-      title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(ic_df$prev_lab), 
-                         " active in ",selected_year,
-                         " by ", title)
+      if (is.null(selected_year)){
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " by ", title)
+      } else {
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " active in ",selected_year,
+                           " by ", title)
+      }
     } else {
-      title_text = str_c(str_to_title(unique(ic_df$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(ic_df$prev_lab), 
-                         " PWH active in ",selected_year,
-                         " by ", title)
+      if (is.null(selected_year)){
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " PWH by ", title)
+      } else {
+        title_text = str_c(str_to_title(unique(ic_df$Variable)), 
+                           " at ",selected_site,
+                           " among ",unique(ic_df$prev_lab), 
+                           " PWH active in ",selected_year,
+                           " by ", title)
+      }
     }
     
     p <- ic_df |>
@@ -773,17 +802,31 @@ key_pop_var_plot <- function(input_df, in_var,
   
 
   if (in_var %in% c("assessed","educated","screened")) {
-    title_text = str_c(str_to_title(unique(temp$Variable)), 
-                       " at ",selected_site,
-                       " among ",unique(temp$prev_lab), 
-                       " active in ",selected_year,
-                       " by key populations")
+    if (is.null(selected_year)){
+      title_text = str_c(str_to_title(unique(temp$Variable)), 
+                         " at ",selected_site,
+                         " among ",unique(temp$prev_lab), 
+                         " by key populations")
+    } else {
+      title_text = str_c(str_to_title(unique(temp$Variable)), 
+                         " at ",selected_site,
+                         " among ",unique(temp$prev_lab), 
+                         " active in ",selected_year,
+                         " by key populations")
+    }
   } else {
-    title_text = str_c(str_to_title(unique(temp$Variable)), 
-                       " at ",selected_site,
-                       " among ",unique(temp$prev_lab), 
-                       " PWH active in ",selected_year,
-                       " by key populations")
+    if (is.null(selected_year)){
+      title_text = str_c(str_to_title(unique(temp$Variable)), 
+                         " at ",selected_site,
+                         " among ",unique(temp$prev_lab), 
+                         " PWH by key populations")
+    } else {
+      title_text = str_c(str_to_title(unique(temp$Variable)), 
+                         " at ",selected_site,
+                         " among ",unique(temp$prev_lab), 
+                         " PWH active in ",selected_year,
+                         " by key populations")
+    }
   }
   
   caption_text = str_c("Dashed line indicates overall average. Gray bars have denominator <10. ",

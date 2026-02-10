@@ -108,6 +108,16 @@ server <- function(input, output, session) {
     
     
   })
+  
+  active_year_options <- reactive({
+    req(df())
+    df() |>
+      select(contains("active")) |>
+      names() |>
+      str_extract("\\d+") |>
+      as.numeric() |>
+      sort() 
+  })
 
   observeEvent(ic_summary_df(),{
     updateActionButton(session, "go_button",
@@ -250,10 +260,11 @@ server <- function(input, output, session) {
   })
   
   output$active_year_choice <- renderUI({
-    req(input$file1)
+    req(active_year_options())
+    
     selectInput("active_year", "Active year of patients",
-                choices = c(2021,2022,2023,2024,2025),
-                selected=2025)
+                choices = active_year_options(),
+                selected = active_year_options() |> last())
     
   })
   

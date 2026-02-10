@@ -3,8 +3,8 @@
 main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_master_df, session){
   
   selected_year <- reactive({
-    if (is.null(input$active_year)) {
-      2025
+    if (input$filter_by_year == FALSE) {
+      NULL
     } else {
       input$active_year
     }
@@ -49,13 +49,22 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     filter(Variable == "Sustained") |> pull()
   
   output$overall_n = renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      pwh_count, 
-      "</span> people with HIV received care at ", 
-      selected_site, 
-      " in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        pwh_count, 
+        "</span> people with HIV received care at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        pwh_count, 
+        "</span> people with HIV received care at ", 
+        selected_site, 
+        " in ", selected_year()
+      ))
+    }
   })
 
   map_data <- eventReactive(input$render_map_button, {
@@ -141,9 +150,14 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1_plot <- renderPlot({
     base_size <- 14
     
-    title_text = str_c("PWH at ", selected_site,
-                       " active in ",selected_year(),
-                       " by key populations")
+    if (is.null(selected_year())){
+      title_text = str_c("PWH at ", selected_site,
+                         " by key populations")
+    } else {
+      title_text = str_c("PWH at ", selected_site,
+                         " active in ",selected_year(),
+                         " by key populations")
+    }
     caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
     
     temp <- tbl |> 
@@ -256,9 +270,15 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1b_plot <- renderPlot({
     base_size <- 14
     
-    title_text = str_c("PWH at ", selected_site,
-                       " active in ",selected_year(),
-                       " by key populations")
+    if (is.null(selected_year())){
+      title_text = str_c("PWH at ", selected_site,
+                         " by key populations")
+    } else {
+      title_text = str_c("PWH at ", selected_site,
+                         " active in ",selected_year(),
+                         " by key populations")
+    }
+    
     caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
     
     temp <- tbl |> 
@@ -535,14 +555,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   })
   
   output$assessed_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      assessed_count, 
-      "</span> people were assessed out of ",
-      pwh_count," people with HIV who received care at ", 
-      selected_site,  
-      " in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        assessed_count, 
+        "</span> people were assessed out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        assessed_count, 
+        "</span> people were assessed out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site,  
+        " in ", selected_year()
+      ))
+    }
   })
   
   n_bars_assessed_overall <<- reactiveVal(1)
@@ -648,14 +678,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   
   
   output$educated_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      educated_count, 
-      "</span> people were educated out of ",
-      pwh_count," people with HIV who received care at ", 
-      selected_site,  
-      " in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        educated_count, 
+        "</span> people were educated out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        educated_count, 
+        "</span> people were educated out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site,  
+        " in ", selected_year()
+      ))
+    }
   })
   
   n_bars_educated_overall <<- reactiveVal(1)
@@ -759,14 +799,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   
   
   output$interested_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      interested_count, 
-      "</span> people were interested out of ",
-      educated_count," people educated at ", 
-      selected_site,  
-      " among PWH active in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        interested_count, 
+        "</span> people were interested out of ",
+        educated_count," people educated at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        interested_count, 
+        "</span> people were interested out of ",
+        educated_count," people educated at ", 
+        selected_site,  
+        " among PWH active in ", selected_year()
+      ))
+    }
   })
   
   n_bars_interested_overall <<- reactiveVal(1)
@@ -902,14 +952,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   })
   
   output$screened_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      screened_count, 
-      "</span> people were screened out of ",
-      pwh_count," people with HIV who received care at ", 
-      selected_site,  
-      " in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        screened_count, 
+        "</span> people were screened out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        screened_count, 
+        "</span> people were screened out of ",
+        pwh_count," people with HIV who received care at ", 
+        selected_site,  
+        " in ", selected_year()
+      ))
+    }
   })
   
   n_bars_screened_overall <<- reactiveVal(1)
@@ -1012,14 +1072,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   }, height = 400)
   
   output$eligible_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      eligible_count, 
-      "</span> people were eligible out of ",
-      assessed_count," people assessed at ", 
-      selected_site,  
-      " among PWH active in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        eligible_count, 
+        "</span> people were eligible out of ",
+        assessed_count," people assessed at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        eligible_count, 
+        "</span> people were eligible out of ",
+        assessed_count," people assessed at ", 
+        selected_site,  
+        " among PWH active in ", selected_year()
+      ))
+    }
   })
   
   n_bars_eligible_overall <<- reactiveVal(1)
@@ -1151,14 +1221,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   })
   
   output$prescribed_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      prescribed_count, 
-      "</span> people were prescribed out of ",
-      interested_eligible_count," people eligible & interested at ", 
-      selected_site,  
-      " among PWH active in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        prescribed_count, 
+        "</span> people were prescribed out of ",
+        interested_eligible_count," people eligible & interested at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        prescribed_count, 
+        "</span> people were prescribed out of ",
+        interested_eligible_count," people eligible & interested at ", 
+        selected_site,  
+        " among PWH active in ", selected_year()
+      ))
+    }
   })
   
   n_bars_prescribed_overall <<- reactiveVal(1)
@@ -1232,14 +1312,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   }, height = 400)
   
   output$initiated_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      initiated_count, 
-      "</span> people were initiated out of ",
-      prescribed_count," people prescribed at ", 
-      selected_site,  
-      " among PWH active in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        initiated_count, 
+        "</span> people were initiated out of ",
+        prescribed_count," people prescribed at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        initiated_count, 
+        "</span> people were initiated out of ",
+        prescribed_count," people prescribed at ", 
+        selected_site,  
+        " among PWH active in ", selected_year()
+      ))
+    }
   })
   
   n_bars_initiated_overall <<- reactiveVal(1)
@@ -1314,14 +1404,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   
   
   output$sustained_n <-  renderUI({
-    HTML(paste0(
-      "<span style='color: #FE5000; font-size: 36px;'>", 
-      sustained_count, 
-      "</span> people were sustained out of ",
-      initiated_count," people initiated at ", 
-      selected_site,  
-      " among PWH active in ", selected_year()
-    ))
+    if (is.null(selected_year())){
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        sustained_count, 
+        "</span> people were sustained out of ",
+        initiated_count," people initiated at ", 
+        selected_site
+      ))
+    } else {
+      HTML(paste0(
+        "<span style='color: #FE5000; font-size: 36px;'>", 
+        sustained_count, 
+        "</span> people were sustained out of ",
+        initiated_count," people initiated at ", 
+        selected_site,  
+        " among PWH active in ", selected_year()
+      ))
+    }
   })
   
   n_bars_sustained_overall <<- reactiveVal(1)
