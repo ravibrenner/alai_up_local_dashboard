@@ -146,6 +146,38 @@ server <- function(input, output, session) {
     }
   })
   
+  # Define the items and their properties in a simple list
+  menu_items <- list(
+    list(id = "assessed",  label = strong("Assessed"),              tab = "assessed_page",   ic = NULL),
+    list(id = "educated",  label = "Educated",                      tab = "educated_page",   ic = "angle-double-right"),
+    list(id = "interested",label = HTML("&nbsp;&nbsp; Interested"), tab = "interested_page", ic = "angle-double-right"),
+    list(id = "screened",  label = "Screened",                      tab = "screened_page",   ic = "angle-double-right"),
+    list(id = "eligible",  label = HTML("&nbsp;&nbsp; Eligible"),   tab = "eligible_page",   ic = "angle-double-right")
+  )
+  
+  # Use a loop to create all 5 renderMenu functions at once
+  map(menu_items, function(item) {
+    output[[paste0(item$id, "_sidebar")]] <- renderMenu({
+      
+      req(input$assessed_choice == "Yes") # Stops rendering if choice is not "Yes"
+      
+      menuItem(
+        text = item$label,
+        tabName = item$tab,
+        icon = if(!is.null(item$ic)) icon(item$ic) else NULL
+      )
+    })
+  })
+  
+  observeEvent(input$assessed_choice, {
+    if (input$assessed_choice == "No") {
+      # If they are on any of the 'Assessed' related tabs, kick them back to home
+      if (input$sidebar %in% c('assessed_page', 'educated_page', 'interested_page', 'screened_page', 'eligible_page')) {
+        updateTabItems(session, "sidebar", "lai_overview")
+      }
+    }
+  })
+  
   output$indicator <- renderUI({
     req(input$file1)
     selectInput("indicator",
