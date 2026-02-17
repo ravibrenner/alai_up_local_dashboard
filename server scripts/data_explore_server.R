@@ -7,6 +7,11 @@ data_explore_server <- function(input, output, filtered_ic_summary_df, session){
     filter_var <- sym(input$filter_var)
     filter_selected <- input$filter_select
   
+    if (input$assessed_choice == "Yes"){
+      prescribed_lag <- "Interested & Eligible"
+    } else {
+      prescribed_lag <- "PWH"
+    }
     
     temp <- filtered_ic_summary_df |>
       group_by(Variable,!!grouping_var,!!filter_var) |>
@@ -23,6 +28,7 @@ data_explore_server <- function(input, output, filtered_ic_summary_df, session){
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
+                                  Variable == "Prescribed" ~ prescribed_lag,
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)]) |>
       group_by(Variable, !!filter_var) |>

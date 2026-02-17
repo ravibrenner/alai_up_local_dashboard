@@ -524,11 +524,17 @@ ic_var_plot <- function(input_df,
                         group_var = NA,
                         base_size_in,
                         selected_site = NULL,
-                        selected_year = NULL){
+                        selected_year = NULL,
+                        assessed_choice = "Yes"){
   
   base_size <- base_size_in # set dynamically
   text_size <- base_size_in / 2.5
   
+  if (assessed_choice == "Yes"){
+    prescribed_lag <- "Interested & Eligible"
+  } else {
+    prescribed_lag <- "PWH"
+  }
   
   if (by_group == FALSE){
     ic_df <- input_df |>
@@ -545,6 +551,7 @@ ic_var_plot <- function(input_df,
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
+                                  Variable == "Prescribed" ~ prescribed_lag,
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)],
              Variable = data.table::fifelse(Variable != "PWH",str_to_lower(Variable),Variable),
@@ -612,6 +619,7 @@ ic_var_plot <- function(input_df,
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
+                                  Variable == "Prescribed" ~ prescribed_lag,
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)],
              Variable = data.table::fifelse(Variable != "PWH",str_to_lower(Variable),Variable),
@@ -735,10 +743,17 @@ ic_var_plot <- function(input_df,
 key_pop_var_plot <- function(input_df, in_var,
                              base_size_in,
                              selected_site = NULL,
-                             selected_year = NULL){
+                             selected_year = NULL,
+                             assessed_choice = "Yes"){
   
   base_size <- base_size_in # set dynamically
   text_size <- base_size_in / 2.5
+  
+  if (assessed_choice == "Yes"){
+    prescribed_lag <- "Interested & Eligible"
+  } else {
+    prescribed_lag <- "PWH"
+  }
   
   process_key_pop <- function(df, filter_expr, key_pop_label) {
     df |>
@@ -755,6 +770,7 @@ key_pop_var_plot <- function(input_df, in_var,
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
+                                  Variable == "Prescribed" ~ prescribed_lag,
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)],
              key_pop = key_pop_label,
@@ -789,6 +805,7 @@ key_pop_var_plot <- function(input_df, in_var,
                                 Variable == "Screened" ~ "PWH",
                                 Variable == "Eligible" ~ "Screened",
                                 Variable == "Interested & Eligible" ~ "Assessed",
+                                Variable == "Prescribed" ~ prescribed_lag,
                                 .default =  lag(Variable)),
            prev = Value[match(prev_lab, Variable)],
            pct = Value / prev,

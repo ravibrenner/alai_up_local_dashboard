@@ -353,15 +353,16 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   })
   
   n_bars_caregap <- reactiveVal(1)
-  prescribed_lag <- reactive({
-    if (input$assessed_choice == "Yes"){
-      return("Interested & Eligible")
-    } else {
-      return("PWH")
-    }
-  })
   
   lai_plot_data <- reactive({
+    if (input$assessed_choice == "Yes"){
+      prescribed_lag <- "Interested & Eligible"
+      filter_list <- c("PWH","assessed","interested & eligible","prescribed","initiated","sustained") 
+    } else {
+      prescribed_lag <- "PWH"
+      filter_list <- c("PWH","prescribed","initiated","sustained") 
+    }
+    
     ic_df <- ic_summary_df |>
       group_by(site, Variable) |>
       summarise(Value=sum(Value,na.rm = T)) |>
@@ -375,7 +376,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
-                                  Variable == "Prescribed" ~ prescribed_lag(),
+                                  Variable == "Prescribed" ~ prescribed_lag,
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)]) |>
       mutate(
@@ -383,7 +384,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
         prev_lab = if_else(prev_lab != "PWH",str_to_lower(prev_lab),prev_lab),
         Percent=Value/prev,
         x_lab = str_c(Value," patients were ",Variable," out of ",prev," ", prev_lab)) |>
-      filter(Variable %in% c("PWH","assessed","interested & eligible","prescribed","initiated","sustained")) |>
+      filter(Variable %in% filter_list) |>
       group_by(Variable) |>
       summarize(low_pct = min(Percent),
                 low_site = max(site[Percent == low_pct]),
@@ -397,8 +398,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
              x_lab = str_c(Value," patients were ",Variable," out of ",prev," ", prev_lab),
              low_site = str_c(low_site, ", ",round(100*low_pct),"%"),
              high_site = str_c(high_site, ", ",round(100*high_pct),"%")) |>
-      arrange(match(Variable,c('PWH','assessed', 'interested & eligible', 
-                               'prescribed', 'initiated', 'sustained'))) |>
+      arrange(match(Variable,filter_list)) |>
       mutate(x_order = row_number(),
              x_lab = fct_reorder(x_lab,x_order))
     
@@ -429,9 +429,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                 family = "Roboto") +
       scale_y_discrete(limits = rev(bar_names),
                        labels = \(x) str_wrap(x, width = 30)) +
-      labs(y = NULL, x = NULL,
-           caption = str_wrap("JMFC not included.\nError bars have been used to show range of values from lowest to highest by site. A narrow interval means less variability by site. Prescribed may be above 100% if patients not clinically eligible are prescribed. Initiated may be above 100% if patients switched into the clinic while on LAI.",
-                              width = 150)) +
+      labs(y = NULL, x = NULL) +
       scale_x_continuous(labels = scales::percent, breaks = seq(0, max_y, 0.2),
                          limits = c(0,max_y + 0.15)) +
       expand_limits(y = 1) +
@@ -1263,7 +1261,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     base_size <- 14
     
     p <- ic_var_plot(ic_summary_df, "prescribed",by_group = F, base_size_in = base_size,
-                     selected_site = selected_site, selected_year = selected_year())
+                     selected_site = selected_site, selected_year = selected_year(),
+                     assessed_choice = input$assessed_choice)
     
     output$prescribed_overall_plot_download <- download_box("prescribed_overall", p,nrow(p$data))
     output$prescribed_overall_table_download <- download_table("prescribed_overall", p$data)
@@ -1288,7 +1287,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     
     p <- key_pop_var_plot(ic_summary_df,"prescribed",
                           base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+                          selected_site = selected_site, selected_year = selected_year(),
+                          assessed_choice = input$assessed_choice)
     
     output$keypop7_plot_download <- download_box("prescribed_keypop", p,nrow(p$data))
     output$keypop7_table_download <- download_table("prescribed_keypop", p$data)
@@ -1304,7 +1304,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     p
   }, height = function() {
     50 * n_bars_prescribed_keypop() + 100
-  })
+  },res = 96)
   
   output$time7_plot <- renderPlot({
     base_size <- 14

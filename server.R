@@ -532,16 +532,47 @@ server <- function(input, output, session) {
     })
   })
   
-  lai_overview_sections <- list(
-    list(id = "top0",title = "Home",plot = NULL, download = NULL),
-    list(id = "care_gap", title = "LAI Care Gap Analysis", plot = "lai_care_gap_plot",
-         download = "lai_care_gap_download_ui"),
-    list(id = "assessed_outcomes", title = "Outcomes among those assessed", plot = NULL,
-         download = NULL)
-  )
+  lai_overview_sections <- reactive({
+    sections <- list(
+      list(id = "top0",title = "Home",plot = NULL, download = NULL),
+      list(id = "care_gap", title = "LAI Care Gap Analysis", plot = "lai_care_gap_plot",
+           download = "lai_care_gap_download_ui")
+    )
+    
+    if (input$assessed_choice == "Yes"){
+      sections <- append(sections, list(
+        
+        list(id = "assessed_outcomes", title = "Outcomes among those assessed", plot = NULL,
+             download = NULL)
+      ))
+    }
+    return(sections)
+  })
   
   output$lai_overview <- renderUI({
     req(input$file1)
+    
+    if (input$assessed_choice == "Yes"){
+      int_elig_box <- box(id = "assessed_outcomes_box",
+                          title = "Outcomes among those assessed",
+                          width = 12,
+                          status = "primary",
+                          solidHeader = TRUE,
+                          div(style = "display:flex; align-items:top; gap:10px;",  
+                              div("Percent"),  
+                              radioButtons(
+                                inputId = "int_elig_pct",label = NULL, 
+                                choices = c("Table", "Row", "Column"),
+                                selected = "Table",
+                                inline = TRUE)),
+                          gt_output(outputId = "int_elig_table"),
+                          downloadButton(outputId = "int_elig_table_download",
+                                         label = "Download table",
+                                         icon = icon("table")),
+                          size = "xs")
+    } else {
+      int_elig_box <- NULL
+    }
     
     fluidPage(
       fluidRow(
@@ -550,7 +581,7 @@ server <- function(input, output, session) {
           div(class = "toc-container",
               h4("Jump to Section"),
               div(class = "toc-links",
-                  map(lai_overview_sections, function(section) {
+                  map(lai_overview_sections(), function(section) {
                     actionLink(inputId = paste0("go_", section$id), label = section$title)
                   })
               )
@@ -567,7 +598,7 @@ server <- function(input, output, session) {
               solidHeader = TRUE,
               help_text$info0),
           # Plot boxes
-          map(lai_overview_sections[2], function(section) {
+          map(lai_overview_sections()[2], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
@@ -579,31 +610,17 @@ server <- function(input, output, session) {
               size = "xs"
             )
           }),
-          box(id = "assessed_outcomes_box",
-              title = "Outcomes among those assessed",
-              width = 12,
-              status = "primary",
-              solidHeader = TRUE,
-              div(style = "display:flex; align-items:top; gap:10px;",  
-                  div("Percent"),  
-                  radioButtons(
-                    inputId = "int_elig_pct",label = NULL, 
-                    choices = c("Table", "Row", "Column"),
-                    selected = "Table",
-                    inline = TRUE)),
-              gt_output(outputId = "int_elig_table"),
-              downloadButton(outputId = "int_elig_table_download",
-                             label = "Download table",
-                             icon = icon("table")),
-              size = "xs")
+          int_elig_box
         )
       )
     )
   })
   
-  map(lai_overview_sections, function(section) {
-    observeEvent(input[[paste0("go_", section$id)]], {
-      runjs(sprintf("
+  observe({
+    map(lai_overview_sections(), function(section) {
+      local({
+        observeEvent(input[[paste0("go_", section$id)]], {
+          runjs(sprintf("
       const target = document.getElementById('%s_box') || document.getElementById('%s');
       if (target) {
         window.scrollTo({
@@ -612,6 +629,8 @@ server <- function(input, output, session) {
         });
       }
     ", section$id, section$id))
+        })
+      })
     })
   })
   
