@@ -58,10 +58,6 @@ load_and_process_data <- function(input_df) {
                  "White","Other","Unknown"))) |>
     mutate(age_cat=factor(
       case_when( 
-        # age>=15 & age<20 ~ "15-19",
-        # age>=20 & age<30 ~ "20-29",
-        # age>=30 & age<66 ~ "30-65",
-        # age>=66 ~ "66+",
         age>=18 & age<=24 ~ "18-24",
         age>=25 & age<=34 ~ "25-34",
         age>=35 & age<=44 ~ "35-44",

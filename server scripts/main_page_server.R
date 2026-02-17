@@ -353,10 +353,15 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   })
   
   n_bars_caregap <- reactiveVal(1)
-  output$lai_care_gap_plot <- renderPlot({
-    
-    base_size <- 14
-    
+  prescribed_lag <- reactive({
+    if (input$assessed_choice == "Yes"){
+      return("Interested & Eligible")
+    } else {
+      return("PWH")
+    }
+  })
+  
+  lai_plot_data <- reactive({
     ic_df <- ic_summary_df |>
       group_by(site, Variable) |>
       summarise(Value=sum(Value,na.rm = T)) |>
@@ -370,6 +375,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                                   Variable == "Screened" ~ "PWH",
                                   Variable == "Eligible" ~ "Screened",
                                   Variable == "Interested & Eligible" ~ "Assessed",
+                                  Variable == "Prescribed" ~ prescribed_lag(),
                                   .default =  lag(Variable)),
              prev = Value[match(prev_lab, Variable)]) |>
       mutate(
@@ -395,6 +401,18 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                                'prescribed', 'initiated', 'sustained'))) |>
       mutate(x_order = row_number(),
              x_lab = fct_reorder(x_lab,x_order))
+    
+    n_bars_caregap(nrow(ic_df))
+    
+    return(ic_df)
+    
+  })
+  
+  output$lai_care_gap_plot <- renderPlot({
+    
+    ic_df <- lai_plot_data()
+    
+    base_size <- 11
     
     bar_names <- ic_df$x_lab[-1]
     max_y = max(ic_df$Percent,na.rm = T)
@@ -435,7 +453,6 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
       chart <- chart
     }
     
-    n_bars_caregap(nrow(chart$data))
     output$lai_care_gap_plot_download <- download_box("lai_care_gap",chart,nrow(chart$data))
     output$lai_care_gap_table_download <- download_table("lai_care_gap",chart$data)
     output$lai_care_gap_download_ui <- renderUI({
@@ -448,8 +465,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     })
     chart
   },height = function(){
-    50 * n_bars_caregap() + 100
-  })
+    (50 * n_bars_caregap()) + 100
+  },res = 96)
   
   output$int_elig_table <- render_gt({
     gt_tbl <- int_elig_table_func(tbl, input$int_elig_pct)
