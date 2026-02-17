@@ -84,28 +84,43 @@ server <- function(input, output, session) {
   
   tbl <- reactive({
     req(df())
-    if (input$filter_by_year == TRUE &&
-        length(input$date_filter) == 2 & !is.null(input$active_year)) {
-      get_current_year_data(df(),
-                            as.numeric(input$active_year),
-                            filter_dates = TRUE,
-                            start_date = as.Date(input$date_filter[1]),
-                            end_date = as.Date(input$date_filter[2]))
-    }
-    else {
-      df()  # fallback if no date range selected
-    }
+    withProgress(message = "Processing data",
+                 detail = "This may take a moment...",
+                 value = 0.4,
+                 {
+                   if (input$filter_by_year == TRUE &&
+                       length(input$date_filter) == 2 & !is.null(input$active_year)) {
+                     get_current_year_data(df(),
+                                           as.numeric(input$active_year),
+                                           filter_dates = TRUE,
+                                           start_date = as.Date(input$date_filter[1]),
+                                           end_date = as.Date(input$date_filter[2]))
+                   }
+                   else {
+                     df()  # fallback if no date range selected
+                   } 
+                 })
+    
   })
   
   cab_master_df <- reactive({
     req(tbl(), interval_1(), interval_2())
-    prepare_cab_master_df(tbl(), interval_1(), interval_2())
+    withProgress(message = "Processing data",
+                 detail = "This may take a moment...",
+                 value = 0.8,
+                 {
+                   prepare_cab_master_df(tbl(), interval_1(), interval_2())
+                 })
   })
   
   ic_summary_df <- reactive({
     req(tbl())
-    prepare_ic_summary(tbl())
-    
+    withProgress(message = "Processing data",
+                 detail = "This may take a moment...",
+                 value = 0.6,
+                 {
+                   prepare_ic_summary(tbl())
+                 })
     
   })
   
@@ -180,19 +195,27 @@ server <- function(input, output, session) {
   
   output$indicator <- renderUI({
     req(input$file1)
+    if (input$assessed_choice == "Yes"){
+      choice_list <- c("Demographics",
+                       "Assessed",
+                       'Educated',
+                       'Interested',
+                       'Screened',
+                       "Eligible",
+                       "Interested & Eligible",
+                       "Prescribed",
+                       "Initiated",
+                       "Sustained")
+    } else {
+      choice_list <- c("Demographics",
+                       "Prescribed",
+                       "Initiated",
+                       "Sustained")
+    }
     selectInput("indicator",
                 "Select an indicator",
-                c("Demographics",
-                  "Assessed",
-                  'Educated',
-                  'Interested',
-                  'Screened',
-                  "Eligible",
-                  "Interested & Eligible",
-                  "Prescribed",
-                  "Initiated",
-                  "Sustained"),
-                selected = "Assessed")
+                choices = choice_list,
+                selected = "Demographics")
   })
   
   # RENDER grouping_var UI
