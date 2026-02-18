@@ -36,6 +36,7 @@ ui <- dashboardPage(
     width = 300,
     sidebarMenu(id='sidebar',
                 menuItem(strong("Home"), tabName= 'home'),
+                uiOutput("site_choice"),
                 radioButtons("assessed_choice",
                              label = "Is Counseling/Screening consistently recorded?",
                              choices = c("Yes","No"),

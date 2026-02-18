@@ -44,12 +44,31 @@ server <- function(input, output, session) {
   # loading in the master dataset and processing it 
   raw_data <- eventReactive(input$go_button, {
     req(input$file1,input$select_sheet)
+
+    result <- tryCatch({
+      data <- read_excel(input$file1$datapath,
+                         sheet = input$select_sheet,
+                         col_types = "text",
+                         na = c("NA","UNK", ".", "C","888888","999999")) |>
+        load_and_process_data()
+      
+      data
+      
+    }, error = function(e) {
+      showNotification(
+        paste("Error processing data. Please check your data carefully.\n
+              The R error message was:", conditionMessage(e)),
+        type = "error",
+        duration = 10,
+        id = "processing_error" # Prevents duplicate notifications
+      )
+      
+      return(NULL)
+    })
     
-    read_excel(input$file1$datapath,
-               sheet = input$select_sheet,
-               col_types = "text",
-               na = c("NA","UNK", ".", "C","888888","999999")) |>
-      load_and_process_data()
+    req(result)
+    return(result)
+    
   })
   
   output$home_page <-  renderUI({
@@ -74,13 +93,53 @@ server <- function(input, output, session) {
     }
   })
   
-  df <- eventReactive(input$go_button, {
+  site_list <- reactive({
+    req(input$file1,input$select_sheet)
+    
+    raw_data() |>
+      pull(site) |>
+      unique() |>
+      str_sort()
+  })
+  
+  output$site_choice <- renderUI({
+    req(input$file1,input$select_sheet)
+    req(length(site_list()) > 1)
+    choice_list <- c(str_c(input$site_name_input, " (all sites)"),site_list())
+    
+    freezeReactiveValue(input, "site_choice_input")
+    
+    selectInput("site_choice_input", "Choose one of the sites below:",
+                choices = choice_list,
+                selected = choice_list[1])
+    
+  })
+  
+  trigger_site_filter <- reactiveVal(FALSE)
+  
+  observe({
+    req(raw_data())
+    if (is.null(input$site_choice_input) ||
+        !input$site_choice_input %in% site_list()) {
+      trigger_site_filter(FALSE)
+    } else if (input$site_choice_input %in% site_list()){
+      trigger_site_filter(TRUE)
+    } 
+  }) 
+  
+  df <- reactive({
+    req(raw_data())
     withProgress(message = "Processing data",
                  detail = "This may take a moment...",
                  {
-                   raw_data()
+                   if (trigger_site_filter() == FALSE) {
+                     return(raw_data())
+                   } else if (trigger_site_filter() == TRUE){
+                     return(raw_data() |>
+                              filter(site == input$site_choice_input))
+                   }
                  })
-  })
+  }) 
   
   tbl <- reactive({
     req(df())
@@ -142,12 +201,19 @@ server <- function(input, output, session) {
   
   observe({
     req(tbl(), ic_summary_df(), cab_master_df())
-    
-      main_page_server(input, output, tbl(), ic_summary_df(), input$site_name_input, cab_master_df(), session)
-      dynamic_filter_select(input, output, ic_summary_df(), input$site_name_input, session)
+      
+      if (length(site_list()) > 1){
+        selected_site <- input$site_choice_input
+      } else {
+        selected_site <- input$site_name_input
+      }
+      main_page_server(input, output, tbl(), ic_summary_df(), selected_site, cab_master_df(), session)
+      dynamic_filter_select(input, output, ic_summary_df(), selected_site, session)
       data_explore_server(input, output, ic_summary_df(), session)
 
   })
+  
+  
   
   observeEvent(input$sidebarItemExpanded, {
     if (input$sidebarItemExpanded == "<strong>LAIindicators</strong>") {
