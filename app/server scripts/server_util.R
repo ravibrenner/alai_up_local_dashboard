@@ -463,7 +463,7 @@ get_IC_df <-function(input_df){
   not_elig_df <- input_df |>   
     select(alai_up_uid, contains("icab_rpv_not_elig")&contains("reason")) |>
     rename_with(~paste0(., "_not_elig_outcome"), !contains("_oth") & contains("reason")) |>
-    rename_with(~paste0(.,"er"), contains("oth") & !contains("other")) |> 
+    rename_with(~str_replace(., "oth$", "other")) |>
     pivot_longer(cols = contains("not_elig"),
                  names_to = c("event_base",".value"),
                  names_pattern = "(.*)_(not_elig_outcome|other)") |> 

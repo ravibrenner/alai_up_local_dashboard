@@ -82,7 +82,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                     by = join_by(zip_code == ZCTA5CE20)) |>
         sf::st_as_sf()
       
-      pal <- colorBin("magma", domain = zip_counts$n,
+      pal <- colorBin(palette = c("#FB6A4A","#EF3B2C","#CB181D","#A50F15","#67000D"),
+                      domain = zip_counts$n,
                       bins = 5, pretty = TRUE)
       
       output$map_data_download <- download_table("zip_code_count", 
@@ -95,6 +96,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                addPolygons(fillColor = ~pal(n),
                            color = "gray",
                            weight = 1,
+                           fillOpacity = 0.5,
                            label = ~str_c(zip_code,": ",n," people")))
     })
   })
