@@ -412,10 +412,14 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     
     ic_df <- lai_plot_data()
     
-    base_size <- 11
+    base_size <- 14
     
     bar_names <- ic_df$x_lab[-1]
-    max_y = max(ic_df$Percent,na.rm = T)
+    if (length(unique(ic_summary_df$site)) > 1){
+      max_y = min(2,max(ic_df$high_pct,na.rm = T)) 
+    } else {
+      max_y = min(2,max(ic_df$Percent,na.rm = T))
+    }
     text_size = base_size / 2.5
     
     # size goal: base size 12. text size 4.8. axis text size 18 (12*1.5)
@@ -443,7 +447,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
             plot.caption.position = "plot") 
     
     if (length(unique(ic_summary_df$site)) > 1){
-      chart <- chart + 
+      chart <- chart +
         geom_errorbar(aes(y = as.numeric(fct_rev(x_lab)) + 0.25,
                           xmin = low_pct,xmax = high_pct),
                       color = "black",width = .25)
@@ -464,7 +468,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     chart
   },height = function(){
     (50 * n_bars_caregap()) + 100
-  },res = 96)
+  }, res = 72)
   
   output$int_elig_table <- render_gt({
     gt_tbl <- int_elig_table_func(tbl, input$int_elig_pct)

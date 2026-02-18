@@ -47,7 +47,8 @@ data_explore_server <- function(input, output, filtered_ic_summary_df, session){
       
     # generate caption text
     group_var_levels <- filtered_ic_summary_df |> pull(!!grouping_var) |> levels()
-    filter_var_levels <- filtered_ic_summary_df |> pull(!!filter_var) |> levels()
+    filter_var_levels <- filtered_ic_summary_df |> 
+      pull(!!filter_var) |> as.factor() |> levels()
     all_var_levels <- expand_grid(group_var_levels, filter_var_levels) |>
       filter(filter_var_levels %in% input$filter_select) |>
       mutate(full_var = str_c(filter_var_levels," ",group_var_levels)) |>

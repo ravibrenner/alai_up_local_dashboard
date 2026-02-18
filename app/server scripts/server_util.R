@@ -388,6 +388,8 @@ get_IC_df <-function(input_df){
     # 3 prescribed
     Prescribed=case_when(
       icab_rpv_rx==1 ~ 1,
+      !is.na(icab_rpv_shot1_date) | 
+        !is.na(icab_rpv_shot2_date) ~1,
       .default = 0
     ),
     # 4 initiated

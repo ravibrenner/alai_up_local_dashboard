@@ -72,7 +72,6 @@ server <- function(input, output, session) {
   })
   
   output$home_page <-  renderUI({
-    # req(input$file1)
     source(file='ui scripts/home.R', local= T)$value
   })
   
@@ -287,14 +286,20 @@ server <- function(input, output, session) {
   # RENDER grouping_var UI
   output$grouping_var <- renderUI({
     req(input$file1)
+    choice_list <- c("Age" = "age_cat",
+                     "Sex" = "sex_birth",
+                     "Race" = "race",
+                     "Ethnicity" = "ethnicity",
+                     "Housing status" = "housing_status",
+                     "Insurance status" = "insurance_status")
+    
+    if (length(site_list()) > 1){
+      choice_list <- c(choice_list,c("Site" = "site"))
+    }
+    
     selectInput("grouping_var", 
                 "Comparison variable", 
-                choices = c("Age" = "age_cat",
-                            "Sex" = "sex_birth",
-                            "Race" = "race",
-                            "Ethnicity" = "ethnicity",
-                            "Housing status" = "housing_status",
-                            "Insurance status" = "insurance_status"),
+                choices = choice_list,
                 selected = "age_cat")
   })
   
@@ -306,6 +311,10 @@ server <- function(input, output, session) {
                   "Ethnicity" = "ethnicity",
                   "Housing status" = "housing_status",
                   "Insurance status" = "insurance_status")
+    
+    if (length(site_list()) > 1){
+      all_vars <- c(all_vars,c("Site" = "site"))
+    }
     
     other_vars <- all_vars[all_vars != input$grouping_var]
     
