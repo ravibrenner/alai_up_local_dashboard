@@ -465,7 +465,8 @@ server <- function(input, output, session) {
     list(id = "age1", title = "Age", plot = "age1_plot", download = "age1_download_ui"),
     list(id = "insurance1", title = "Insurance status", plot = "insurance1_plot", download = "insurance1_download_ui"),
     list(id = "housing1", title = "Housing status", plot = "housing1_plot", download = "housing1_download_ui"),
-    list(id = "keypop1", title = "Key populations", plot = "keypop1_plot", download = "keypop1_download_ui")
+    list(id = "keypop1", title = "Key populations", plot = "keypop1_plot", download = "keypop1_download_ui"),
+    list(id = "zip1", title = "ZIP code", plot = NULL, download = NULL)
   )
   
   output$demographics_page <- renderUI({
@@ -494,19 +495,8 @@ server <- function(input, output, session) {
               status = "info",
               solidHeader = TRUE,
               help_text$info1),
-          # Box for the map
-          box(id = "map_box",
-              title = "ZIP codes",
-              width = 12,
-              status = "primary",
-              solidHeader = TRUE,
-              actionButton("render_map_button",
-                           label = "Create map",
-                           icon = icon("play")),
-              leafletOutput("zip_map"),
-              downloadButton(outputId = "map_data_download", label = "Download data")),
           # Plot boxes
-          map(demo_sections_info[-1], function(section) {
+          map(demo_sections_info[2:8], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
@@ -517,7 +507,18 @@ server <- function(input, output, session) {
               uiOutput(section$download),
               size = "xs"
             )
-          })
+          }),
+          # Box for the map
+          box(id = "zip1_box",
+              title = "ZIP codes",
+              width = 12,
+              status = "primary",
+              solidHeader = TRUE,
+              actionButton("render_map_button",
+                           label = "Create map",
+                           icon = icon("play")),
+              leafletOutput("zip_map"),
+              downloadButton(outputId = "map_data_download", label = "Download data"))
         )
       )
     )

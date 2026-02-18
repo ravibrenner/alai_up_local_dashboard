@@ -71,7 +71,8 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     withProgress(message = "Preparing map...", {
       zip_counts <- tbl |>
         group_by(zip_code) |>
-        count()
+        summarize(n = n(),
+                  n_on_cab = sum(ever_on_cab == 1))
       
       zip_geom <- sf::st_read("www/cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp") |>
         filter(ZCTA5CE20 %in% zip_counts$zip_code)
@@ -91,13 +92,20 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                                                    sf::st_drop_geometry() |>
                                                    arrange(-n))
       
+      labels <- sprintf(
+        "<strong>%s</strong><br/>Total people: %s<br/>Number ever on iCAB/RPV: %s",
+        zip_counts$zip_code, 
+        zip_counts$n, 
+        zip_counts$n_on_cab
+      ) |> lapply(HTML)
+      
       return(leaflet(zip_counts) |>
                addProviderTiles(providers$CartoDB.Positron) |>
                addPolygons(fillColor = ~pal(n),
                            color = "gray",
                            weight = 1,
                            fillOpacity = 0.5,
-                           label = ~str_c(zip_code,": ",n," people")))
+                           label = labels))
     })
   })
   
