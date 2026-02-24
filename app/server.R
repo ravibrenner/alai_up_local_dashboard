@@ -464,7 +464,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity1", title = "Ethnicity", plot = "ethnicity1_plot", download = "ethnicity1_download_ui"),
     list(id = "age1", title = "Age", plot = "age1_plot", download = "age1_download_ui"),
     list(id = "insurance1", title = "Insurance status", plot = "insurance1_plot", download = "insurance1_download_ui"),
-    list(id = "housing1", title = "Housing status", plot = "housing1_plot", download = "housing1_download_ui"),
     list(id = "keypop1", title = "Key populations", plot = NULL, download = NULL),
     list(id = "zip1", title = "ZIP code", plot = NULL, download = NULL)
   )
@@ -563,8 +562,7 @@ server <- function(input, output, session) {
     list(id = "ethnicity1b", title = "Ethnicity", plot = "ethnicity1b_plot", download = "ethnicity1b_download_ui"),
     list(id = "age1b", title = "Age", plot = "age1b_plot", download = "age1b_download_ui"),
     list(id = "insurance1b", title = "Insurance status", plot = "insurance1b_plot", download = "insurance1b_download_ui"),
-    list(id = "housing1b", title = "Housing status", plot = "housing1b_plot", download = "housing1b_download_ui"),
-    list(id = "keypop1b", title = "Key populations", plot = "keypop1b_plot", download = "keypop1b_download_ui")
+    list(id = "keypop1b", title = "Key populations", plot = NULL, download = NULL)
   )
   
   output$demo_by_lai <- renderUI({
@@ -594,7 +592,7 @@ server <- function(input, output, session) {
               solidHeader = TRUE,
               help_text$info1b),
           # Plot boxes
-          map(demo_sections_info_b[-1], function(section) {
+          map(demo_sections_info_b[2:7], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
@@ -605,7 +603,23 @@ server <- function(input, output, session) {
               uiOutput(section$download),
               size = "xs"
             )
-          })
+          }),
+          box(id = "keypop1b_box",
+              title = "Key Populations",
+              width = 12,
+              status = "primary",
+              solidHeader = TRUE,
+              selectInput(
+                inputId = "keypop1b_choice",
+                label = "Key population choice", 
+                choices = c("Housing status","Gender",
+                            "Risk MSM","Risk IDU","Risk Heterosex",
+                            "Employment status","Poverty level",
+                            "Immigration status","Language",
+                            "Incarceration history"),
+                selected = "Housing status"),
+              plotOutput("keypop1b_plot",, height = "auto"),
+              uiOutput("keypop1b_download_ui"))
         )
       )
     )
@@ -737,7 +751,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity2", title = "Ethnicity", plot = "ethnicity2_plot", download = "ethnicity2_download_ui"                         ),
     list(id = "age2", title = "Age", plot = "age2_plot", download = "age2_download_ui"                                                 ),
     list(id = "insurance2", title = "Insurance status", plot = "insurance2_plot", download = "insurance2_download_ui"                  ),
-    list(id = "housing2", title = "Housing status", plot = "housing2_plot", download = "housing2_download_ui"                          ),
     list(id = "keypop2", title = "Key populations", plot = "keypop2_plot", download = "keypop2_download_ui"                            ),
     list(id = "time2", title = "Assessed over time by person", plot = "time2_plot", download = "time2_download_ui"                     ),
     list(id = "time2_event", title = "Assessed over time by encounter", plot = "time2_event_plot", download = "time2_event_download_ui")
@@ -759,7 +772,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity3", title = "Ethnicity", plot = "ethnicity3_plot", download = "ethnicity3_download_ui"),
     list(id = "age3", title = "Age", plot = "age3_plot", download = "age3_download_ui"),
     list(id = "insurance3", title = "Insurance status", plot = "insurance3_plot", download = "insurance3_download_ui"),
-    list(id = "housing3", title = "Housing status", plot = "housing3_plot", download = "housing3_download_ui"),
     list(id = "keypop3", title = "Key populations", plot = "keypop3_plot", download = "keypop3_download_ui"),
     list(id = "time3", title = "Educated over time by person", plot = "time3_plot", download = "time3_download_ui"),
     list(id = "time3_event", title = "Educated over time by encounter", plot = "time3_event_plot", download = "time3_event_download_ui")
@@ -781,7 +793,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity4", title = "Ethnicity", plot = "ethnicity4_plot", download = "ethnicity4_download_ui"),
     list(id = "age4", title = "Age", plot = "age4_plot", download = "age4_download_ui"),
     list(id = "insurance4", title = "Insurance status", plot = "insurance4_plot", download = "insurance4_download_ui"),
-    list(id = "housing4", title = "Housing status", plot = "housing4_plot", download = "housing4_download_ui"),
     list(id = "keypop4", title = "Key populations", plot = "keypop4_plot", download = "keypop4_download_ui"),
     list(id = "time4", title = "Interested over time by person", plot = "time4_plot", download = "time4_download_ui"),
     list(id = "time4_event", title = "Interested over time by encounter", plot = "time4_event_plot", download = "time4_event_download_ui"),
@@ -804,7 +815,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity5", title = "Ethnicity", plot = "ethnicity5_plot", download = "ethnicity5_download_ui"),
     list(id = "age5", title = "Age", plot = "age5_plot", download = "age5_download_ui"),
     list(id = "insurance5", title = "Insurance status", plot = "insurance5_plot", download = "insurance5_download_ui"),
-    list(id = "housing5", title = "Housing status", plot = "housing5_plot", download = "housing5_download_ui"),
     list(id = "keypop5", title = "Key populations", plot = "keypop5_plot", download = "keypop5_download_ui"),
     list(id = "time5", title = "Screened over time by person", plot = "time5_plot", download = "time5_download_ui"),
     list(id = "time5_event", title = "Screened over time by encounter", plot = "time5_event_plot", download = "time5_event_download_ui")
@@ -826,7 +836,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity6", title = "Ethnicity", plot = "ethnicity6_plot", download = "ethnicity6_download_ui"),
     list(id = "age6", title = "Age", plot = "age6_plot", download = "age6_download_ui"),
     list(id = "insurance6", title = "Insurance status", plot = "insurance6_plot", download = "insurance6_download_ui"),
-    list(id = "housing6", title = "Housing status", plot = "housing6_plot", download = "housing6_download_ui"),
     list(id = "keypop6", title = "Key populations", plot = "keypop6_plot", download = "keypop6_download_ui"),
     list(id = "time6", title = "Eligible over time by person", plot = "time6_plot", download = "time6_download_ui"),
     list(id = "time6_event", title = "Eligible over time by encounter", plot = "time6_event_plot", download = "time6_event_download_ui"),
@@ -849,7 +858,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity7", title = "Ethnicity", plot = "ethnicity7_plot", download = "ethnicity7_download_ui"),
     list(id = "age7", title = "Age", plot = "age7_plot", download = "age7_download_ui"),
     list(id = "insurance7", title = "Insurance status", plot = "insurance7_plot", download = "insurance7_download_ui"),
-    list(id = "housing7", title = "Housing status", plot = "housing7_plot", download = "housing7_download_ui"),
     list(id = "keypop7", title = "Key populations", plot = "keypop7_plot", download = "keypop7_download_ui"),
     list(id = "time7", title = "Prescribed over time", plot = "time7_plot", download = "time7_download_ui")
  )
@@ -870,7 +878,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity8", title = "Ethnicity", plot = "ethnicity8_plot", download = "ethnicity8_download_ui"),
     list(id = "age8", title = "Age", plot = "age8_plot", download = "age8_download_ui"),
     list(id = "insurance8", title = "Insurance status", plot = "insurance8_plot", download = "insurance8_download_ui"),
-    list(id = "housing8", title = "Housing status", plot = "housing8_plot", download = "housing8_download_ui"),
     list(id = "keypop8", title = "Key populations", plot = "keypop8_plot", download = "keypop8_download_ui"),
     list(id = "time8", title = "Initiated over time", plot = "time8_plot", download = "time8_download_ui")
   )
@@ -891,7 +898,6 @@ server <- function(input, output, session) {
     list(id = "ethnicity9", title = "Ethnicity", plot = "ethnicity9_plot", download = "ethnicity9_download_ui"),
     list(id = "age9", title = "Age", plot = "age9_plot", download = "age9_download_ui"),
     list(id = "insurance9", title = "Insurance status", plot = "insurance9_plot", download = "insurance9_download_ui"),
-    list(id = "housing9", title = "Housing status", plot = "housing9_plot", download = "housing9_download_ui"),
     list(id = "keypop9", title = "Key populations", plot = "keypop9_plot", download = "keypop9_download_ui"),
     list(id = "time9", title = "Time spent on CAB", plot = "time9_plot", download = "time9_download_ui"),
     list(id = "reason9", title = "Discontinued reasons", plot = "discontinued_reason_plot", download = "discontinued_reason_download_ui")

@@ -118,8 +118,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     race1      = list(var = "race",             label = "race_demographics"),
     ethnicity1 = list(var = "ethnicity",        label = "ethnicity_demographics"),
     age1       = list(var = "age_cat",          label = "age_demographics"),
-    insurance1 = list(var = "insurance_status", label = "insurance_demographics"),
-    housing1   = list(var = "housing_status",   label = "housing_demographics")
+    insurance1 = list(var = "insurance_status", label = "insurance_demographics")
   )
   
   n_bars <- list()
@@ -197,8 +196,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     race1b      = list(var = "race",             label = "race_demographics_lai"),
     ethnicity1b = list(var = "ethnicity",        label = "ethnicity_demographics_lai"),
     age1b       = list(var = "age_cat",          label = "age_demographics_lai"),
-    insurance1b = list(var = "insurance_status", label = "insurance_demographics_lai"),
-    housing1b   = list(var = "housing_status",   label = "housing_demographics_lai")
+    insurance1b = list(var = "insurance_status", label = "insurance_demographics_lai")
   )
   
   n_bars <- list()
@@ -239,74 +237,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1b_plot <- renderPlot({
     base_size <- 14
     
-    if (is.null(selected_year())){
-      title_text = str_c("PWH at ", selected_site,
-                         " by key populations")
-    } else {
-      title_text = str_c("PWH at ", selected_site,
-                         " active in ",selected_year(),
-                         " by key populations")
-    }
+    var_name <- input$keypop1b_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
+    p <- demo_plot(tbl, var_str, base_size,
+                   selected_site = selected_site, selected_year = selected_year(),
+                   by_cab_status = TRUE)
     
-    temp <- tbl |> 
-      mutate(ever_on_cab = if_else(ever_on_cab == 0,
-                                   "Never on LAI ART","Ever on LAI ART")) |>
-      summarize(.by = ever_on_cab,
-                n = n(),
-                MSM = sum(risk_msm == 1,na.rm = T), 
-                IDU = sum(risk_idu == 1,na.rm = T),
-                TG_NB = sum(gender_id %in% c(3,4,5),na.rm = T)) |>
-      pivot_longer(cols = !c(n,ever_on_cab),
-                   names_to = "key_pop",
-                   values_to = "count") |>
-      mutate(.by = ever_on_cab,
-             key_pop = case_when(
-               key_pop == "TG_NB" ~ "Transgender/nonbinary",
-               .default = key_pop
-             ),
-             pct = count/n,
-             bar_text = str_c(round(100*pct,0),"%"),
-             axis_text = str_c(ever_on_cab," (",count," out of ",n," PWH)")) 
-    
-    p <- temp |>
-      ggplot(aes(x = 100*pct,y = axis_text)) + 
-      geom_bar(position = "dodge",stat = "identity", aes(fill = ever_on_cab), width = 0.7) + 
-      geom_text(aes(label = bar_text),
-                size = 14/2.5,
-                hjust = -0.1) +
-      scale_x_continuous(limits = c(0,100)) + 
-      scale_y_discrete(labels = \(x) str_wrap(x, width = 70)) +
-      scale_fill_manual(values = c(
-        "Never on LAI ART" = "#9ECAE1",
-        "Ever on LAI ART" = "#08519C"
-      )) + 
-      facet_wrap(~key_pop, 
-                 ncol = 1, scales = "free_y",
-                 strip.position = "left") +
-      labs(title = title_text,
-           x = NULL, y = NULL,
-           caption = str_wrap(caption_text,120)) + 
-      theme_minimal(base_size = 14,
-                    base_family = "Roboto") +
-      theme(plot.title = element_text(size = rel(1.3)),
-            plot.title.position = "plot",
-            strip.placement = "outside",
-            strip.text.y.left = element_text(angle = 0, size = rel(1.5), hjust = 1),
-            axis.title = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.grid.minor.x = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks = element_blank(),
-            axis.text.y = element_text(hjust = 1, size = rel(1.4), color = "black"),
-            plot.margin = margin(5,0,5,0),
-            plot.caption.position = "plot",
-            plot.caption = element_text(hjust = 0),
-            legend.position = "none")
-    
-    output$keypop1b_plot_download <- download_box("keypop_demographics_lai", p,nrow(p$data))
-    output$keypop1b_table_download <- download_table("keypop_demographics_lai", p$data)
+    output$keypop1b_plot_download <- download_box(paste0(var_str,"_demographics_lai"), p,nrow(p$data))
+    output$keypop1b_table_download <- download_table(paste0(var_str,"_demographics_lai"), p$data)
     output$keypop1b_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop1b_plot_download", label = "Download plot"),
@@ -454,56 +402,48 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     ethnicity2 = list(var = "ethnicity",        label = "ethnicity", input_var = "assessed"),
     age2       = list(var = "age_cat",          label = "age",       input_var = "assessed"),
     insurance2 = list(var = "insurance_status", label = "insurance", input_var = "assessed"),
-    housing2   = list(var = "housing_status",   label = "housing",   input_var = "assessed"),
-    
+
     sex3       = list(var = "sex_birth",        label = "sex",       input_var = "educated"),
     race3      = list(var = "race",             label = "race",      input_var = "educated"),
     ethnicity3 = list(var = "ethnicity",        label = "ethnicity", input_var = "educated"),
     age3       = list(var = "age_cat",          label = "age",       input_var = "educated"),
     insurance3 = list(var = "insurance_status", label = "insurance", input_var = "educated"),
-    housing3   = list(var = "housing_status",   label = "housing",   input_var = "educated"),
-    
+
     sex4       = list(var = "sex_birth",        label = "sex",       input_var = "interested"),
     race4      = list(var = "race",             label = "race",      input_var = "interested"),
     ethnicity4 = list(var = "ethnicity",        label = "ethnicity", input_var = "interested"),
     age4       = list(var = "age_cat",          label = "age",       input_var = "interested"),
     insurance4 = list(var = "insurance_status", label = "insurance", input_var = "interested"),
-    housing4   = list(var = "housing_status",   label = "housing",   input_var = "interested"),
-    
+
     sex5       = list(var = "sex_birth",        label = "sex",       input_var = "screened"),
     race5      = list(var = "race",             label = "race",      input_var = "screened"),
     ethnicity5 = list(var = "ethnicity",        label = "ethnicity", input_var = "screened"),
     age5       = list(var = "age_cat",          label = "age",       input_var = "screened"),
     insurance5 = list(var = "insurance_status", label = "insurance", input_var = "screened"),
-    housing5   = list(var = "housing_status",   label = "housing",   input_var = "screened"),
-    
+
     sex6       = list(var = "sex_birth",        label = "sex",       input_var = "eligible"),
     race6      = list(var = "race",             label = "race",      input_var = "eligible"),
     ethnicity6 = list(var = "ethnicity",        label = "ethnicity", input_var = "eligible"),
     age6       = list(var = "age_cat",          label = "age",       input_var = "eligible"),
     insurance6 = list(var = "insurance_status", label = "insurance", input_var = "eligible"),
-    housing6   = list(var = "housing_status",   label = "housing",   input_var = "eligible"),
-    
+
     sex7       = list(var = "sex_birth",        label = "sex",       input_var = "prescribed"),
     race7      = list(var = "race",             label = "race",      input_var = "prescribed"),
     ethnicity7 = list(var = "ethnicity",        label = "ethnicity", input_var = "prescribed"),
     age7       = list(var = "age_cat",          label = "age",       input_var = "prescribed"),
     insurance7 = list(var = "insurance_status", label = "insurance", input_var = "prescribed"),
-    housing7   = list(var = "housing_status",   label = "housing",   input_var = "prescribed"),
-    
+
     sex8       = list(var = "sex_birth",        label = "sex",       input_var = "initiated"),
     race8      = list(var = "race",             label = "race",      input_var = "initiated"),
     ethnicity8 = list(var = "ethnicity",        label = "ethnicity", input_var = "initiated"),
     age8       = list(var = "age_cat",          label = "age",       input_var = "initiated"),
     insurance8 = list(var = "insurance_status", label = "insurance", input_var = "initiated"),
-    housing8   = list(var = "housing_status",   label = "housing",   input_var = "initiated"),
-    
+
     sex9       = list(var = "sex_birth",        label = "sex",       input_var = "sustained"),
     race9      = list(var = "race",             label = "race",      input_var = "sustained"),
     ethnicity9 = list(var = "ethnicity",        label = "ethnicity", input_var = "sustained"),
     age9       = list(var = "age_cat",          label = "age",       input_var = "sustained"),
-    insurance9 = list(var = "insurance_status", label = "insurance", input_var = "sustained"),
-    housing9   = list(var = "housing_status",   label = "housing",   input_var = "sustained")
+    insurance9 = list(var = "insurance_status", label = "insurance", input_var = "sustained")
   )
   
   n_bars <- list()
@@ -591,12 +531,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop2_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"assessed",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop2_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop2_plot_download <- download_box("assessed_keypop", p,nrow(p$data))
-    output$keypop2_table_download <- download_table("assessed_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "assessed", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop2_plot_download <- download_box(paste0("assessed_",var_str), p,nrow(p$data))
+    output$keypop2_table_download <- download_table(paste0("assessed_",var_str), p$data)
     output$keypop2_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop2_plot_download", label = "Download plot"),
@@ -714,12 +666,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop3_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"educated",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop3_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop3_plot_download <- download_box("educated_keypop", p,nrow(p$data))
-    output$keypop3_table_download <- download_table("educated_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "educated", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop3_plot_download <- download_box(paste0("educated_",var_str), p,nrow(p$data))
+    output$keypop3_table_download <- download_table(paste0("educated_",var_str), p$data)
     output$keypop3_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop3_plot_download", label = "Download plot"),
@@ -835,12 +799,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop4_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"interested",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop4_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop4_plot_download <- download_box("interested_keypop", p,nrow(p$data))
-    output$keypop4_table_download <- download_table("interested_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "interested", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop4_plot_download <- download_box(paste0("interested_",var_str), p,nrow(p$data))
+    output$keypop4_table_download <- download_table(paste0("interested_",var_str), p$data)
     output$keypop4_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop4_plot_download", label = "Download plot"),
@@ -988,12 +964,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop5_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"screened",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop5_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop5_plot_download <- download_box("screened_keypop", p,nrow(p$data))
-    output$keypop5_table_download <- download_table("screened_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "screened", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop5_plot_download <- download_box(paste0("screened_",var_str), p,nrow(p$data))
+    output$keypop5_table_download <- download_table(paste0("screened_",var_str), p$data)
     output$keypop5_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop5_plot_download", label = "Download plot"),
@@ -1108,12 +1096,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop6_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"eligible",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop6_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop6_plot_download <- download_box("eligible_keypop", p,nrow(p$data))
-    output$keypop6_table_download <- download_table("eligible_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "eligible", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop6_plot_download <- download_box(paste0("eligible_",var_str), p,nrow(p$data))
+    output$keypop6_table_download <- download_table(paste0("eligible_",var_str), p$data)
     output$keypop6_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop6_plot_download", label = "Download plot"),
@@ -1258,13 +1258,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop7_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"prescribed",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year(),
-                          assessed_choice = input$assessed_choice)
+    var_name <- input$keypop7_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop7_plot_download <- download_box("prescribed_keypop", p,nrow(p$data))
-    output$keypop7_table_download <- download_table("prescribed_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "prescribed", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop7_plot_download <- download_box(paste0("prescribed_",var_str), p,nrow(p$data))
+    output$keypop7_table_download <- download_table(paste0("prescribed_",var_str), p$data)
     output$keypop7_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop7_plot_download", label = "Download plot"),
@@ -1350,12 +1361,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop8_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"initiated",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop8_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop8_plot_download <- download_box("initiated_keypop", p,nrow(p$data))
-    output$keypop8_table_download <- download_table("initiated_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "initiated", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop8_plot_download <- download_box(paste0("initiated_",var_str), p,nrow(p$data))
+    output$keypop8_table_download <- download_table(paste0("initiated_",var_str), p$data)
     output$keypop8_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop8_plot_download", label = "Download plot"),
@@ -1442,12 +1465,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop9_plot <- renderPlot({
     base_size <- 14
     
-    p <- key_pop_var_plot(ic_summary_df,"sustained",
-                          base_size_in = base_size,
-                          selected_site = selected_site, selected_year = selected_year())
+    var_name <- input$keypop9_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    output$keypop9_plot_download <- download_box("sustained_keypop", p,nrow(p$data))
-    output$keypop9_table_download <- download_table("sustained_keypop", p$data)
+    p <- ic_var_plot(ic_summary_df, "sustained", by_group = T, 
+                     group_var = var_str, base_size_in = base_size,
+                     selected_site = selected_site, selected_year = selected_year())
+    
+    output$keypop9_plot_download <- download_box(paste0("sustained_",var_str), p,nrow(p$data))
+    output$keypop9_table_download <- download_table(paste0("sustained_",var_str), p$data)
     output$keypop9_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop9_plot_download", label = "Download plot"),

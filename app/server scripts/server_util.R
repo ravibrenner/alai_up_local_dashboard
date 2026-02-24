@@ -736,12 +736,22 @@ ic_var_plot <- function(input_df,
     
     max_x = max(ic_df$Percent,na.rm=T)
     x_lim = max(1.15,max_x+0.15)
+    
     title = case_when(group_var_string == "age_cat" ~ "Age",
                       group_var_string == "race" ~ "Race",
                       group_var_string == "ethnicity" ~ "Ethnicity",
                       group_var_string == "sex_birth" ~ "Sex",
                       group_var_string == "insurance_status" ~ "Insurance status",
-                      group_var_string == "housing_status" ~ "Housing status")
+                      group_var_string == "housing_status" ~ "Housing status",
+                      group_var_string == "gender_id" ~ "Gender",
+                      group_var_string == "risk_msm" ~ "Risk MSM",
+                      group_var_string == "risk_idu" ~ "Risk IDU",
+                      group_var_string == "risk_heterosex" ~ "Risk Heterosex",
+                      group_var_string == "employment_status" ~ "Employment status",
+                      group_var_string == "poverty_level" ~ "Poverty level",
+                      group_var_string == "immigration_status_undoc" ~ "Immigration status",
+                      group_var_string == "language" ~ "Language",
+                      group_var_string == "incarceration_history" ~ "Incarceration history")
     
     
     if (in_var %in% c("assessed","educated","screened")) {
@@ -823,166 +833,6 @@ ic_var_plot <- function(input_df,
             plot.caption = element_text(size = rel(0.9),hjust = 0))
   }
   
-}
-
-# function for custom key populations
-key_pop_var_plot <- function(input_df, in_var,
-                             base_size_in,
-                             selected_site = NULL,
-                             selected_year = NULL,
-                             assessed_choice = "Yes"){
-  
-  base_size <- base_size_in # set dynamically
-  text_size <- base_size_in / 2.5
-  
-  if (assessed_choice == "Yes"){
-    prescribed_lag <- "Interested & Eligible"
-  } else {
-    prescribed_lag <- "PWH"
-  }
-  
-  process_key_pop <- function(df, filter_expr, key_pop_label) {
-    df |>
-      filter({{filter_expr}}) |>
-      group_by(Variable) |>
-      summarise(Value = sum(Value), PWH1 = sum(PWH1), .groups = "drop") |>
-      arrange(match(Variable,c('PWH', 'Assessed','Educated',
-                               'Interested', 'Screened', 'Eligible', 
-                               'Interested & Eligible',
-                               'Prescribed', 'Initiated', 'Sustained'))) |> 
-      ungroup() |>
-      mutate(prev_lab = case_when(Variable == "Educated" ~ "PWH",
-                                  Variable == "Interested" ~ "Educated",
-                                  Variable == "Screened" ~ "PWH",
-                                  Variable == "Eligible" ~ "Screened",
-                                  Variable == "Interested & Eligible" ~ "Assessed",
-                                  Variable == "Prescribed" ~ prescribed_lag,
-                                  .default =  lag(Variable)),
-             prev = Value[match(prev_lab, Variable)],
-             key_pop = key_pop_label,
-             Variable = data.table::fifelse(Variable != "PWH", str_to_lower(Variable), Variable),
-             prev_lab = data.table::fifelse(prev_lab != "PWH",str_to_lower(prev_lab),prev_lab),
-             Percent = Value / prev,
-             y_lab = str_c(key_pop, " (", Value, " ", Variable, " out of ", prev, " ", prev_lab,")"),
-             small_n = data.table::fifelse(prev < 10, "0", "1")
-      ) |>
-      filter(Variable == {{in_var}},
-             !is.nan(Percent))
-  }
-  
-  df_msm <- process_key_pop(input_df, risk_msm == 1, "MSM")
-  df_idu <- process_key_pop(input_df, risk_idu == 1, "IDU")
-  df_tg  <- process_key_pop(input_df, gender_id %in% c(3, 4, 5), "Transgender/nonbinary")
-  temp <- bind_rows(df_msm, df_idu, df_tg)
-  
-  max_x = max(temp$Percent,na.rm=T)
-  x_lim = max(1.15,max_x+0.15)
-  
-  avg_value <- input_df |>
-    group_by(Variable) |>
-    summarise(Value = sum(Value), PWH1 = sum(PWH1), .groups = "drop") |>
-    arrange(match(Variable,c('PWH', 'Assessed','Educated',
-                             'Interested', 'Screened', 'Eligible', 
-                             'Interested & Eligible',
-                             'Prescribed', 'Initiated', 'Sustained'))) |> 
-    ungroup() |>
-    mutate(prev_lab = case_when(Variable == "Educated" ~ "PWH",
-                                Variable == "Interested" ~ "Educated",
-                                Variable == "Screened" ~ "PWH",
-                                Variable == "Eligible" ~ "Screened",
-                                Variable == "Interested & Eligible" ~ "Assessed",
-                                Variable == "Prescribed" ~ prescribed_lag,
-                                .default =  lag(Variable)),
-           prev = Value[match(prev_lab, Variable)],
-           pct = Value / prev,
-           Variable = data.table::fifelse(Variable != "PWH", str_to_lower(Variable), Variable)) |>
-    filter(Variable == {{in_var}}) |>
-    pull(pct)
-  
-
-  if (in_var %in% c("assessed","educated","screened")) {
-    if (is.null(selected_year)){
-      title_text = str_c(str_to_title(unique(temp$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(temp$prev_lab), 
-                         " by key populations")
-    } else {
-      title_text = str_c(str_to_title(unique(temp$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(temp$prev_lab), 
-                         " active in ",selected_year,
-                         " by key populations")
-    }
-  } else {
-    if (is.null(selected_year)){
-      title_text = str_c(str_to_title(unique(temp$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(temp$prev_lab), 
-                         " PWH by key populations")
-    } else {
-      title_text = str_c(str_to_title(unique(temp$Variable)), 
-                         " at ",selected_site,
-                         " among ",unique(temp$prev_lab), 
-                         " PWH active in ",selected_year,
-                         " by key populations")
-    }
-  }
-  
-  caption_text = str_c("Dashed line indicates overall average. Gray bars have denominator <10. ",
-                       "MSM: Men who have sex with men; IDU: Injection drug use. 
-                       Note that there may be overlap between these categories.")
-  
-  p <- temp |>
-    ggplot(aes(y = fct_rev(y_lab), x= Percent,
-               alpha = small_n)) +
-    geom_col(aes(fill = small_n), width = 0.7) +
-    geom_vline(xintercept = avg_value, linetype = "dashed",
-               color = "black", linewidth = 0.5) + 
-    scale_fill_manual(values= c("1" = "#08519C","0" = "gray")) + 
-    scale_x_continuous(labels = scales::percent, breaks = seq(0, 1, 0.1),
-                       limits = c(0,x_lim)) +
-    scale_alpha_manual(values = c("0" = 0.5, "1" = 1)) +
-    labs(title = str_wrap(title_text,80),
-         y = NULL, x = NULL,
-         caption = str_wrap(caption_text,120)) +
-    theme_minimal(base_size = base_size,
-                  base_family = "Roboto") 
-  
-  if (nrow(p$data) == 1){
-    p +
-      geom_text(aes(label = paste0(round(Percent * 100), '%')),
-                position = position_dodge(width = 0.9),
-                hjust = -0.1,
-                size=text_size*0.8, fontface = "bold",
-                family = "Roboto") +
-      theme(legend.position = 'none',
-            title = element_text(size = rel(1)),
-            axis.text.y = element_text(size = rel(1.3), color = "black"),
-            panel.grid = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks = element_blank(),
-            axis.line = element_blank(),
-            plot.title.position = "plot",
-            plot.caption.position = "plot",
-            plot.caption = element_text(hjust = 0, size = rel(0.9)))
-  } else {
-    p + 
-      geom_text(aes(label = paste0(round(Percent * 100), '%')),
-                position = position_dodge(width = 0.9),
-                hjust = -0.1,
-                size=text_size*0.9, fontface = "bold",
-                family = "Roboto") +
-      theme(legend.position = 'none',
-            title = element_text(size = rel(1.1)),
-            axis.text.y = element_text(size = rel(1.4), color = "black"),
-            panel.grid = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks = element_blank(),
-            axis.line = element_blank(),
-            plot.title.position = "plot",
-            plot.caption.position = "plot",
-            plot.caption = element_text(size = rel(0.9), hjust = 0))
-  }
 }
 
 
