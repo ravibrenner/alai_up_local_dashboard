@@ -290,9 +290,18 @@ server <- function(input, output, session) {
                      "Sex" = "sex_birth",
                      "Race" = "race",
                      "Ethnicity" = "ethnicity",
+                     "Insurance status" = "insurance_status",
                      "Housing status" = "housing_status",
-                     "Insurance status" = "insurance_status")
-    
+                     "Gender" = "gender_id",
+                     "Risk MSM" = "risk_msm",
+                     "Risk IDU" = "risk_idu",
+                     "Risk Heterosex" = "risk_heterosex",
+                     "Employment status" = "employment_status",
+                     "Poverty level" = "poverty_level",
+                     "Immigration status" = "immigration_status_undoc",
+                     "Language" = "language",
+                     "Incarceration history" = "incarceration_history")
+  
     if (length(site_list()) > 1){
       choice_list <- c(choice_list,c("Site" = "site"))
     }
@@ -305,12 +314,21 @@ server <- function(input, output, session) {
   
   # OBSERVE changes to grouping_var and update filter_var
   observeEvent(input$grouping_var, {
-    all_vars <- c("Age" = "age_cat",
-                  "Sex" = "sex_birth",
-                  "Race" = "race",
-                  "Ethnicity" = "ethnicity",
-                  "Housing status" = "housing_status",
-                  "Insurance status" = "insurance_status")
+    all_vars <-  c("Age" = "age_cat",
+                   "Sex" = "sex_birth",
+                   "Race" = "race",
+                   "Ethnicity" = "ethnicity",
+                   "Insurance status" = "insurance_status",
+                   "Housing status" = "housing_status",
+                   "Gender" = "gender_id",
+                   "Risk MSM" = "risk_msm",
+                   "Risk IDU" = "risk_idu",
+                   "Risk Heterosex" = "risk_heterosex",
+                   "Employment status" = "employment_status",
+                   "Poverty level" = "poverty_level",
+                   "Immigration status" = "immigration_status_undoc",
+                   "Language" = "language",
+                   "Incarceration history" = "incarceration_history")
     
     if (length(site_list()) > 1){
       all_vars <- c(all_vars,c("Site" = "site"))
@@ -471,6 +489,16 @@ server <- function(input, output, session) {
   output$demographics_page <- renderUI({
     req(input$file1)
     
+    choice_list <- c("Housing status","Gender",
+                     "Risk MSM","Risk IDU","Risk Heterosex",
+                     "Employment status","Poverty level",
+                     "Immigration status","Language",
+                     "Incarceration history")
+    
+    if (length(site_list()) > 1){
+      choice_list <- c(choice_list,"Site")
+    } 
+    
     fluidPage(
       fluidRow(
         column(
@@ -516,11 +544,7 @@ server <- function(input, output, session) {
               selectInput(
                 inputId = "keypop1_choice",
                 label = "Key population choice", 
-                choices = c("Housing status","Gender",
-                            "Risk MSM","Risk IDU","Risk Heterosex",
-                            "Employment status","Poverty level",
-                            "Immigration status","Language",
-                            "Incarceration history"),
+                choices = choice_list,
                 selected = "Housing status"),
               plotOutput("keypop1_plot",, height = "auto"),
               uiOutput("keypop1_download_ui")),
@@ -568,6 +592,16 @@ server <- function(input, output, session) {
   output$demo_by_lai <- renderUI({
     req(input$file1)
     
+    choice_list <- c("Housing status","Gender",
+                     "Risk MSM","Risk IDU","Risk Heterosex",
+                     "Employment status","Poverty level",
+                     "Immigration status","Language",
+                     "Incarceration history")
+    
+    if (length(site_list()) > 1){
+      choice_list <- c(choice_list,"Site")
+    } 
+    
     fluidPage(
       fluidRow(
         column(
@@ -612,11 +646,7 @@ server <- function(input, output, session) {
               selectInput(
                 inputId = "keypop1b_choice",
                 label = "Key population choice", 
-                choices = c("Housing status","Gender",
-                            "Risk MSM","Risk IDU","Risk Heterosex",
-                            "Employment status","Poverty level",
-                            "Immigration status","Language",
-                            "Incarceration history"),
+                choices = choice_list,
                 selected = "Housing status"),
               plotOutput("keypop1b_plot",, height = "auto"),
               uiOutput("keypop1b_download_ui"))
@@ -741,7 +771,20 @@ server <- function(input, output, session) {
     })
   })
   
-  
+
+  keypop_choice_list <- reactive({
+    temp <- c("Housing status","Gender",
+      "Risk MSM","Risk IDU","Risk Heterosex",
+      "Employment status","Poverty level",
+      "Immigration status","Language",
+      "Incarceration history")
+    
+    if (length(site_list()) > 1){
+      temp <- c(temp,"Site")
+    }
+    
+    return(temp)
+  }) 
   
   assessed_sections_info <- list(
     list(id = "top2", title = "Home", plot = NULL, download = NULL),
@@ -764,6 +807,12 @@ server <- function(input, output, session) {
     n_output_id = "assessed_n"
   )
   
+  observe({
+    updateSelectInput(session, "keypop2_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop2_choice) # Preserve user selection
+  })
+  
   educated_sections_info <- list(
     list(id = "top3", title = "Home", plot = NULL, download = NULL),
     list(id = "overall3", title = "Overall", plot = "educated_overall_plot", download = "educated_overall_download_ui"),
@@ -777,6 +826,8 @@ server <- function(input, output, session) {
     list(id = "time3_event", title = "Educated over time by encounter", plot = "time3_event_plot", download = "time3_event_download_ui")
   )
   
+  
+  
   # Educated
   renderSectionPage(
     input, output, 
@@ -784,6 +835,12 @@ server <- function(input, output, session) {
     sections_info = educated_sections_info,
     n_output_id = "educated_n"
   )
+  
+  observe({
+    updateSelectInput(session, "keypop3_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop3_choice)
+  })
   
   interested_sections_info <- list(
     list(id = "top4", title = "Home", plot = NULL, download = NULL),
@@ -807,6 +864,12 @@ server <- function(input, output, session) {
     n_output_id = "interested_n"
   )
   
+  observe({
+    updateSelectInput(session, "keypop4_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop4_choice)
+  })
+  
   screened_sections_info <- list(
     list(id = "top5", title = "Home", plot = NULL, download = NULL),
     list(id = "overall5", title = "Overall", plot = "screened_overall_plot", download = "screened_overall_download_ui"),
@@ -826,7 +889,13 @@ server <- function(input, output, session) {
     page_id = "screened_page",
     sections_info = screened_sections_info,
     n_output_id = "screened_n"
-  )
+  )  
+  
+  observe({
+    updateSelectInput(session, "keypop5_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop5_choice)
+  })
   
   eligible_sections_info <- list(
     list(id = "top6", title = "Home", plot = NULL, download = NULL),
@@ -850,6 +919,12 @@ server <- function(input, output, session) {
     n_output_id = "eligible_n"
   )
   
+  observe({
+    updateSelectInput(session, "keypop6_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop6_choice)
+  })
+  
   prescribed_sections_info <- list(
     list(id = "top7", title = "Home", plot = NULL, download = NULL),
     list(id = "overall7", title = "Overall", plot = "prescribed_overall_plot", download = "prescribed_overall_download_ui"),
@@ -870,6 +945,12 @@ server <- function(input, output, session) {
     n_output_id = "prescribed_n"
   )
   
+  observe({
+    updateSelectInput(session, "keypop7_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop7_choice)
+  })
+  
   initiated_sections_info <- list(
     list(id = "top8", title = "Home", plot = NULL, download = NULL),
     list(id = "overall8", title = "Overall", plot = "initiated_overall_plot", download = "initiated_overall_download_ui"),
@@ -888,7 +969,13 @@ server <- function(input, output, session) {
     page_id = "initiated_page",
     sections_info = initiated_sections_info,
     n_output_id = "initiated_n"
-  )
+  )  
+  
+  observe({
+    updateSelectInput(session, "keypop8_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop8_choice)
+  })
   
   sustained_sections_info <- list(
     list(id = "top9", title = "Home", plot = NULL, download = NULL),
@@ -910,6 +997,12 @@ server <- function(input, output, session) {
     sections_info = sustained_sections_info,
     n_output_id = "sustained_n"
   )
+  
+  observe({
+    updateSelectInput(session, "keypop9_choice",
+                      choices = keypop_choice_list(),
+                      selected = input$keypop9_choice)
+  })
   
   clinical_sections_info <- list(
     list(id = "top10", title = "Home", plot = NULL, download = NULL),

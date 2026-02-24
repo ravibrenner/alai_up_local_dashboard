@@ -344,7 +344,8 @@ demo_plot <- function(input_df, in_col, base_size_in,
                     in_col_string == "poverty_level" ~ "Poverty level",
                     in_col_string == "immigration_status_undoc" ~ "Immigration status",
                     in_col_string == "language" ~ "Language",
-                    in_col_string == "incarceration_history" ~ "Incarceration history")
+                    in_col_string == "incarceration_history" ~ "Incarceration history",
+                    in_col_string == "site" ~ "Site")
   
   if (is.null(selected_year)){
     title_text = str_c("PWH at ", selected_site,
@@ -751,7 +752,8 @@ ic_var_plot <- function(input_df,
                       group_var_string == "poverty_level" ~ "Poverty level",
                       group_var_string == "immigration_status_undoc" ~ "Immigration status",
                       group_var_string == "language" ~ "Language",
-                      group_var_string == "incarceration_history" ~ "Incarceration history")
+                      group_var_string == "incarceration_history" ~ "Incarceration history",
+                      group_var_string == "site" ~ "Site")
     
     
     if (in_var %in% c("assessed","educated","screened")) {
