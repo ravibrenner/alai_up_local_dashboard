@@ -108,7 +108,7 @@ ui <- dashboardPage(
         fluidRow(
           box(
             id = "input_box",
-            title = "Upload data",
+            title = "Process data",
             width = 6,
             status = "primary",
             solidHeader = TRUE,
@@ -116,7 +116,7 @@ ui <- dashboardPage(
             selectInput("select_sheet","Select a sheet",choices = NULL),
             textInput("site_name_input","Site name", value = NULL),
             disabled(actionButton("go_button",
-                                  "Upload data",
+                                  "Process data",
                                   icon = icon("play")))
             )),
         uiOutput('home_page')

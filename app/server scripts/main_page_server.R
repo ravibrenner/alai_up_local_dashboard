@@ -160,65 +160,24 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
   output$keypop1_plot <- renderPlot({
     base_size <- 14
     
-    if (is.null(selected_year())){
-      title_text = str_c("PWH at ", selected_site,
-                         " by key populations")
-    } else {
-      title_text = str_c("PWH at ", selected_site,
-                         " active in ",selected_year(),
-                         " by key populations")
-    }
-    caption_text = "MSM: Men who have sex with men; IDU: Injection drug use. Note that there may be overlap between these categories."
+    var_name <- input$keypop1_choice
+    var_str = case_when(var_name == "Housing status" ~ "housing_status",
+                        var_name == "Gender" ~ "gender_id",
+                        var_name == "Risk MSM" ~ "risk_msm",
+                        var_name == "Risk IDU" ~ "risk_idu",
+                        var_name == "Risk Heterosex" ~ "risk_heterosex",
+                        var_name == "Employment status" ~ "employment_status",
+                        var_name == "Poverty level" ~ "poverty_level",
+                        var_name == "Immigration status" ~ "immigration_status_undoc",
+                        var_name == "Language" ~ "language",
+                        var_name == "Incarceration history" ~ "incarceration_history")
     
-    temp <- tbl |> 
-      summarize(n = n(),
-                MSM = sum(risk_msm == 1,na.rm = T), 
-                IDU = sum(risk_idu == 1,na.rm = T),
-                TG_NB = sum(gender_id %in% c(3,4,5),na.rm = T)) |>
-      pivot_longer(cols = !c(n),
-                   names_to = "key_pop",
-                   values_to = "count") |>
-      mutate(key_pop = case_when(
-               key_pop == "TG_NB" ~ "Transgender/nonbinary",
-               .default = key_pop
-             ),
-             pct = count/n,
-             bar_text = str_c(round(100*pct,0),"%"),
-             axis_text = str_c(key_pop," (",count," out of ",n," PWH)")) 
+    p <- demo_plot(tbl, var_str, base_size,
+                   selected_site = selected_site, selected_year = selected_year(),
+                   by_cab_status = FALSE)
     
-    p <- temp |>
-      ggplot(aes(x = 100*pct,y = axis_text)) + 
-      geom_bar(position = "dodge",stat = "identity", fill = "#08519C", width = 0.7) + 
-      geom_text(aes(label = bar_text),
-                size = 14/2.5,
-                hjust = -0.1) +
-      scale_x_continuous(limits = c(0,100)) + 
-      scale_y_discrete(labels = \(x) str_wrap(x, width = 70)) +
-      facet_wrap(~key_pop, 
-                 ncol = 1, scales = "free_y",
-                 strip.position = "left") +
-      labs(title = title_text,
-           x = NULL, y = NULL,
-           caption = str_wrap(caption_text,120)) + 
-      theme_minimal(base_size = 14,
-                    base_family = "Roboto") +
-      theme(plot.title = element_text(size = rel(1.3)),
-            plot.title.position = "plot",
-            strip.placement = "outside",
-            strip.text.y.left = element_text(angle = 0, size = rel(1.5), hjust = 1),
-            axis.title = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.grid.minor.x = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks = element_blank(),
-            axis.text.y = element_text(hjust = 1, size = rel(1.4), color = "black"),
-            plot.margin = margin(5,0,5,0),
-            plot.caption.position = "plot",
-            plot.caption = element_text(hjust = 0),
-            legend.position = "none")
-    
-    output$keypop1_plot_download <- download_box("keypop_demographics_lai", p,nrow(p$data))
-    output$keypop1_table_download <- download_table("keypop_demographics_lai", p$data)
+    output$keypop1_plot_download <- download_box(paste0(var_str,"_demographics"), p,nrow(p$data))
+    output$keypop1_table_download <- download_table(paste0(var_str,"_demographics"), p$data)
     output$keypop1_download_ui <- renderUI({
       tagList(
         downloadButton(outputId = "keypop1_plot_download", label = "Download plot"),

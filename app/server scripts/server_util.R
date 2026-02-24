@@ -102,7 +102,78 @@ load_and_process_data <- function(input_df) {
       .default = "Unknown"
     ),
     levels = c("Stable or permanent","Temporary",
-               "Unstable","Unknown"))) |>
+               "Unstable","Unknown")),
+    gender_id = factor(case_when(
+      gender_id == 1 ~ "Cisgender Man",
+      gender_id == 2 ~ "Cisgender Woman",
+      gender_id == 3 ~ "Transgender Woman",
+      gender_id == 4 ~ "Transgender Man",
+      gender_id == 5 ~ "Nonbinary",
+      is.na(gender_id) ~ "Unknown",
+      .default = "Other"
+    ), levels = c("Cisgender Man","Cisgender Woman",
+                  "Transgender Woman","Transgender Man",
+                  "Nonbinary","Other","Unknown")),
+    risk_msm = factor(case_when(
+      risk_msm == 0 ~ "Not MSM",
+      risk_msm == 1 ~ "MSM",
+      .default = "Unknown"
+    ), levels = c("Not MSM","MSM","Unknown")),
+    risk_idu = factor(case_when(
+      risk_idu == 0 ~ "No IDU",
+      risk_idu == 1 ~ "IDU",
+      .default = "Unknown"
+    ), levels = c("No IDU","IDU","Unknown")),
+    risk_heterosex = factor(case_when(
+      risk_heterosex == 0 ~ "No heterosexual contact",
+      risk_heterosex == 1 ~ "Heterosexual contact",
+      .default = "Unknown"
+    ), levels = c("No heterosexual contact","Heterosexual contact","Unknown")),
+    employment_status = factor(case_when(
+      employment_status == 1 ~ "Employed full time",
+      employment_status == 2 ~ "Employed part time",
+      employment_status == 3 ~ "Unemployed",
+      .default = "Unknown"
+    ), levels = c("Employed full time","Employed part time",
+                  "Unemployed","Unknown")),
+    poverty_level = factor(case_when(
+      poverty_level == 1 ~ "<100% of the FPL",
+      poverty_level == 2 ~ "101%-200% of the FPL",
+      poverty_level == 3 ~ "201-300% of the FPL",
+      poverty_level == 4 ~ "301% or more of the FPL",
+      .default = "Unknown"
+    ), levels = c("<100% of the FPL","101%-200% of the FPL",
+                  "201-300% of the FPL","301% or more of the FPL","Unknown")),
+    immigration_status_undoc = factor(case_when(
+      immigration_status_undoc == 0 ~ "US citizen or documented",
+      immigration_status_undoc == 1 ~ "Undocumented",
+      .default = "Unknown"
+    ), levels = c("US citizen or documented","Undocumented","Unknown")),
+    language = factor(case_when(
+      language == 1 ~ "English",
+      language == 2 ~ "Spanish",
+      language == 3 ~ "Chinese",
+      language == 4 ~ "Haitian Creole",
+      language == 5 ~ "Tagalog",
+      language == 6 ~ "Vietnamese",
+      language == 7 ~ "Arabic",
+      language == 8 ~ "Amharic",
+      language == 20 ~ "Other",
+      .default = "Unknown"
+    ), levels = c("English","Spanish",
+                  "Chinese","Haitian Creole",
+                  "Tagalog","Vietnamese",
+                  "Arabic","Amharic",
+                  "Other","Unknown")),
+    incarceration_history = factor(case_when(
+      incarceration_history == 0 ~ "No history of incarcerations",
+      incarceration_history == 1 ~ "Current incarceration",
+      incarceration_history == 2 ~ "History of incarceration",
+      incarceration_history == 3 ~ "Community supervision (e.g. probation)",
+      .default = "Unknown"
+    ), levels = c("No history of incarcerations","Current incarceration",
+                  "History of incarceration","Community supervision (e.g. probation)",
+                  "Unknown"))) |>
     mutate(ever_on_cab = if_else(!is.na(icab_rpv_shot1_date) | 
                                  !is.na(icab_rpv_shot2_date),1,0))
   
@@ -264,7 +335,16 @@ demo_plot <- function(input_df, in_col, base_size_in,
                     in_col_string == "ethnicity" ~ "Ethnicity",
                     in_col_string == "sex_birth" ~ "Sex",
                     in_col_string == "insurance_status" ~ "Insurance status",
-                    in_col_string == "housing_status" ~ "Housing status")
+                    in_col_string == "housing_status" ~ "Housing status",
+                    in_col_string == "gender_id" ~ "Gender",
+                    in_col_string == "risk_msm" ~ "Risk MSM",
+                    in_col_string == "risk_idu" ~ "Risk IDU",
+                    in_col_string == "risk_heterosex" ~ "Risk Heterosex",
+                    in_col_string == "employment_status" ~ "Employment status",
+                    in_col_string == "poverty_level" ~ "Poverty level",
+                    in_col_string == "immigration_status_undoc" ~ "Immigration status",
+                    in_col_string == "language" ~ "Language",
+                    in_col_string == "incarceration_history" ~ "Incarceration history")
   
   if (is.null(selected_year)){
     title_text = str_c("PWH at ", selected_site,
@@ -497,8 +577,12 @@ get_IC_df <-function(input_df){
 prepare_ic_summary <- function(input_df) {
   input_df |>
     get_IC_df() |>
-    group_by(site,age_cat, sex_birth, race, ethnicity, insurance_status, housing_status,
-             risk_msm, risk_idu, gender_id) |>
+    group_by(site,age_cat, sex_birth, race, ethnicity, insurance_status, 
+             gender_id, 
+             risk_msm, risk_idu, risk_heterosex,
+             housing_status, employment_status,
+             poverty_level, immigration_status_undoc, 
+             language, incarceration_history) |>
     summarise(
       PWH = sum(PWH),
       PWH1 = sum(PWH1),

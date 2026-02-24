@@ -465,7 +465,7 @@ server <- function(input, output, session) {
     list(id = "age1", title = "Age", plot = "age1_plot", download = "age1_download_ui"),
     list(id = "insurance1", title = "Insurance status", plot = "insurance1_plot", download = "insurance1_download_ui"),
     list(id = "housing1", title = "Housing status", plot = "housing1_plot", download = "housing1_download_ui"),
-    list(id = "keypop1", title = "Key populations", plot = "keypop1_plot", download = "keypop1_download_ui"),
+    list(id = "keypop1", title = "Key populations", plot = NULL, download = NULL),
     list(id = "zip1", title = "ZIP code", plot = NULL, download = NULL)
   )
   
@@ -496,7 +496,7 @@ server <- function(input, output, session) {
               solidHeader = TRUE,
               help_text$info1),
           # Plot boxes
-          map(demo_sections_info[2:8], function(section) {
+          map(demo_sections_info[2:7], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
@@ -508,6 +508,23 @@ server <- function(input, output, session) {
               size = "xs"
             )
           }),
+          #box for key pop
+          box(id = "keypop1_box",
+              title = "Key Populations",
+              width = 12,
+              status = "primary",
+              solidHeader = TRUE,
+              selectInput(
+                inputId = "keypop1_choice",
+                label = "Key population choice", 
+                choices = c("Housing status","Gender",
+                            "Risk MSM","Risk IDU","Risk Heterosex",
+                            "Employment status","Poverty level",
+                            "Immigration status","Language",
+                            "Incarceration history"),
+                selected = "Housing status"),
+              plotOutput("keypop1_plot",, height = "auto"),
+              uiOutput("keypop1_download_ui")),
           # Box for the map
           box(id = "zip1_box",
               title = "ZIP codes",
