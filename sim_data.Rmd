@@ -11,12 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(janitor)
+library(zipcodeR)
+data("zip_code_db")
 ```
 
+get data
 ```{r}
-input_df <- read_excel("data/local minimal template.xlsx")
+input_df <- read_excel("data/ALAI UP Client-level Reporting Tool_short_template_2.26.26.xlsx",
+                       sheet = "Client-level data")
 
 input_df[1:1000,] <- NA
+
+ny_zips <- zip_code_db |>
+  filter(county == "New York County",
+         !is.na(lat))
+
+set.seed(2026)
 ```
 
 ```{r}
@@ -24,6 +34,7 @@ n = 1000
 df <- input_df |>
   mutate(site = "My site",
          alai_up_uid = row_number(),
+         zip_code = sample(ny_zips$zipcode,n, replace = T),
          age = round(truncnorm::rtruncnorm(n, a = 18, b = 90, mean = 42, sd = 13)),
          birth_year = 2025 - age,
          ethnicity_hispanic = rbinom(n,1,0.2),
@@ -48,10 +59,22 @@ df <- input_df |>
          active_2024 = rbinom(n,1,0.95),
          active_2025 = rbinom(n,1,0.95),
          risk_msm = rbinom(n,1,0.6),
+         risk_idu = rbinom(n,1,0.1),
+         risk_heterosex = rbinom(n,1,0.3),
          insurance_status = sample(x = c(1,2,3,4,5,6,7,8,NA),size = n, replace = T,
                                    prob = c(0.15,0.25,0.1,0.05,0.01,0.01,0.01,0.4,0.02)),
          housing_status = sample(x = c(1,2,3,NA),size = n, replace = T,
                                  prob = c(0.8,0.1,0.05,0.05)),
+         employment_status = sample(x = c(1,2,3,NA),size= n, replace = T,
+                                     prob = c(0.8,0.1,0.05,0.05)),
+         poverty_level = sample(x = c(1,2,3,4,NA), size = n, replace = T),
+         immigration_status_undoc = sample(x = c(0,1,NA), size = n, replace = T,
+                                           prob = c(0.8,0.1,0.1)),
+         language = sample(x = c(1,2,3,4,5,6,7,8,20,NA),size = n, replace = T,
+                           prob = c(0.91,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01)),
+         incarceration_history = sample(x = c(0,1,2,3,NA), size = n, replace = T,
+                                        prob = c(0.8,0.05,0.05,0.05,0.05)),
+         cd4_recent_result = truncnorm::rtruncnorm(n, a = 0, b = 1500, mean = 650, sd = 200),
          # counseling and screening
          # ever and never
          icab_rpv_counsel_ever = rbinom(n,1,0.6),
@@ -70,7 +93,7 @@ df <- input_df |>
          ),
          icab_rpv_counsel_1_outcome = case_when(
            icab_rpv_counsel_ever == 1 ~ sample(x = c(1,2,3), size = n, replace = T,
-                                               prob = c(0.7,0.2,0.1)),
+                                               prob = c(0.5,0.25,0.25)),
            .default = NA
          ),
          icab_rpv_disinterest_reason_1 = case_when(
@@ -85,7 +108,7 @@ df <- input_df |>
          ),
          icab_rpv_counsel_2_outcome = case_when(
            icab_rpv_counsel_ever == 1 & num_counsel == 2 ~ sample(x = c(1,2,3), size = n, replace = T,
-                                               prob = c(0.7,0.2,0.1)),
+                                               prob = c(0.5,0.25,0.25)),
            .default = NA
          ),
          icab_rpv_disinterest_reason_2 = case_when(
@@ -100,7 +123,7 @@ df <- input_df |>
          ),
          icab_rpv_screen_1_outcome = case_when(
            icab_rpv_screen_ever == 1 ~ sample(x = c(0,1), size = n, replace = T,
-                                               prob = c(0.6,0.4)),
+                                               prob = c(0.7,0.3)),
            .default = NA
          ),
          icab_rpv_not_elig_1_reason = case_when(
@@ -116,7 +139,7 @@ df <- input_df |>
          ),
          icab_rpv_screen_2_outcome = case_when(
            icab_rpv_screen_ever == 1 & num_counsel == 2 ~ sample(x = c(0,1), size = n, replace = T,
-                                               prob = c(0.6,0.4)),
+                                               prob = c(0.7,0.3)),
            .default = NA
          ),
          icab_rpv_not_elig_2_reason = case_when(
@@ -128,22 +151,26 @@ df <- input_df |>
          # rx 
          icab_rpv_rx = case_when(
            (icab_rpv_counsel_1_outcome == 3 | icab_rpv_counsel_2_outcome == 3) &
-             (icab_rpv_screen_1_outcome == 1 | icab_rpv_screen_1_outcome == 1) ~ rbinom(n,1,0.96)
+             (icab_rpv_screen_1_outcome == 1 | icab_rpv_screen_1_outcome == 1) ~ rbinom(n,1,0.98)
          ),
          icab_rpv_rx_date = if_else(icab_rpv_rx == 1, ref_date - runif(n,60,90),NA),
          
          # icab shots
          num_shots = if_else(icab_rpv_rx == 1,sample(seq(2,20,by = 1),size = n, replace = T),NA),
          
-         
          # discontinuation
+         icab_rpv_discontinued = if_else(icab_rpv_rx == 1, rbinom(n,1,0.2),NA),
+         icab_rpv_discontinued_reason = if_else(icab_rpv_discontinued ==1,
+                                                sample(x = c(1,2,3,4,5,6,7,8,9,10,20), size = n, replace = T),
+                                                NA),
          
          # hiv vl
+         num_vls = sample(seq(7,10),size = n, replace = T)
          )
 ```
 
 
-
+cab doses
 ```{r}
 cab_doses <- df |>
   select(alai_up_uid,contains("icab_rpv_shot"),num_shots,ref_date) |>
@@ -159,19 +186,19 @@ cab_doses <- df |>
                         NA),
          date = case_when(
            !is.na(num_shots) & dose == 1 ~ {
-             out <- c(first(ref_date),first(ref_date) + rnorm(1,30,2.5))
+             out <- c(first(ref_date),first(ref_date) + rnorm(1,30,5))
              d <- out[2]
              for (i in 3:n()){
-               d <- d + rnorm(1,30,2.5)
+               d <- d + rnorm(1,30,5)
                out <- c(out,d)
              }
              out
            },
            !is.na(num_shots) & dose == 2 ~  {
-             out <- c(first(ref_date),first(ref_date) + rnorm(1,30,2.5))
+             out <- c(first(ref_date),first(ref_date) + rnorm(1,30,5))
              d <- out[2]
              for (i in 3:n()){
-               d <- d + rnorm(1,60,3)
+               d <- d + rnorm(1,60,6)
                out <- c(out,d)
              }
              out
@@ -181,22 +208,71 @@ cab_doses <- df |>
          date = if_else(index > num_shots,NA,date)) |> 
   pivot_wider(names_from = "index",
               values_from = c("date","dose"),
-              names_glue = "icab_rpv_shot{.name}_{.value}")
+              names_glue = "icab_rpv_shot{index}_{.value}") 
 ```
 
-Join cab doses back to data
+viral loads
 ```{r}
-df <- df |>
-  select(!contains("icab_rpv_shot")) |>
-  full_join(cab_doses)
+vl_df <- df |>
+  select(alai_up_uid,contains("hiv_vl")&!contains("dx")&!contains("pre"),num_vls,ref_date) |>
+  pivot_longer(cols = contains("hiv_vl"),
+               names_to = c("index",".value"),
+               names_pattern = "hiv_vl_(\\d+)_(date|dose)") |>
+  mutate(index = as.numeric(index),
+         date = as.Date(date)) |>
+  arrange(alai_up_uid, index) |>
+  mutate(.by = alai_up_uid,
+         result = if_else(any(!is.na(num_vls)),
+                          sample(c(1,2,3,4,5,6),1,replace = T, 
+                                 prob = c(0.7,0.1,0.05,0.07,0.04,0.04)),
+                          NA),
+         date = if_else(
+           !is.na(num_vls), {
+             out <- c(first(ref_date))
+             d <- out[1]
+             for (i in 2:n()){
+               d <- d + rnorm(1,90,10)
+               out <- c(out,d)
+             }
+             out
+           }, NA)) |>
+  filter(!is.na(index)) |>
+  mutate(result = if_else(index > num_vls,NA,result),
+         date = if_else(index > num_vls,NA,date)) |>
+  mutate(.by = alai_up_uid,
+         max_cab_date = max(date,na.rm = T)) |> 
+  pivot_wider(names_from = "index",
+              values_from = c("date","result"),
+              names_glue = "hiv_vl_{index}_{.value}") 
 ```
 
 
 
-Maybe a tree based process would be better for the actual events?
-Construct a tree, then define the probabilities, let them fall down the tree accordingly. finally add dates that make possible sense
+Join cab doses and vl back to data
+```{r}
+filled_df <- df |>
+  select(!contains("icab_rpv_shot")) |>
+  full_join(cab_doses) |>
+  select(!(contains("hiv_vl")&!contains("dx")&!contains("pre"))) |>
+  full_join(vl_df) |>
+  # add pre_icab_vl and discontinued date
+  mutate(hiv_vl_pre_icab_date = icab_rpv_shot1_date,
+         hiv_vl_pre_icab_result = if_else(!is.na(hiv_vl_pre_icab_date),
+                                          sample(c(1,2,3,4,5,6),1,replace = T,
+                                                 prob = c(0.8,0.1,0.05,0.03,0.01,0.01)),
+                                          NA),
+         icab_rpv_discontinued_date = if_else(icab_rpv_discontinued == 1,
+                                              max_cab_date + 30,
+                                              NA)) |>
+  select(names(input_df))
+```
 
-Another option: add all possible values for  counsel, screen, date, dose, then go back and set to NA those that don't make sense. May require long format?
+write to dataframe
+```{r}
+writexl::write_xlsx(filled_df,
+                    path = "data/simulated_data.xlsx")
+```
+
 
 
 

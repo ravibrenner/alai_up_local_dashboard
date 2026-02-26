@@ -523,7 +523,7 @@ server <- function(input, output, session) {
               solidHeader = TRUE,
               help_text$info1),
           # Plot boxes
-          map(demo_sections_info[2:7], function(section) {
+          map(demo_sections_info[2:6], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
@@ -626,7 +626,7 @@ server <- function(input, output, session) {
               solidHeader = TRUE,
               help_text$info1b),
           # Plot boxes
-          map(demo_sections_info_b[2:7], function(section) {
+          map(demo_sections_info_b[2:6], function(section) {
             box(
               id = paste0(section$id, "_box"),
               title = section$title,
