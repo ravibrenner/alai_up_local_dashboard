@@ -1578,3 +1578,59 @@ ontime_plot_func <- function(input_df,interval_1,interval_2,
   
   return(p)
 }
+
+full_report_table <- function(summary_df, cab_df){
+  col_list <- c("Age" = "age_cat",
+                "Sex" = "sex_birth",
+                "Race" = "race",
+                "Ethnicity" = "ethnicity",
+                "Insurance status" = "insurance_status",
+                "Housing status" = "housing_status",
+                "Gender" = "gender_id",
+                "Risk MSM" = "risk_msm",
+                "Risk IDU" = "risk_idu",
+                "Risk Heterosex" = "risk_heterosex",
+                "Employment status" = "employment_status",
+                "Poverty level" = "poverty_level",
+                "Immigration status" = "immigration_status_undoc",
+                "Language" = "language",
+                "Incarceration history" = "incarceration_history")
+  
+  ic_outcomes <- summary_df |>
+    pivot_wider(names_from = "Variable", values_from = "Value") |>
+    summarize(Variable = "Overall",
+              Value = "Overall",
+              Assessed = sum(Assessed),
+              Educated = sum(Educated),
+              Interested = sum(Interested),
+              Screened = sum(Screened),
+              Eligible = sum(Eligible),
+              `Interested & Eligible` = sum(`Interested & Eligible`),
+              Prescribed = sum(Prescribed),
+              Initiated = sum(Initiated),
+              Sustained = sum(Sustained))
+  
+  for (i in 1:length(col_list)){
+    col <- sym(col_list[i])
+    col_name <- names(col_list)[i]
+    
+    temp <- summary_df |>
+      pivot_wider(names_from = "Variable", values_from = "Value") |>
+      group_by({{col}}) |>
+      summarize(Assessed = sum(Assessed),
+                Educated = sum(Educated),
+                Interested = sum(Interested),
+                Screened = sum(Screened),
+                Eligible = sum(Eligible),
+                `Interested & Eligible` = sum(`Interested & Eligible`),
+                Prescribed = sum(Prescribed),
+                Initiated = sum(Initiated),
+                Sustained = sum(Sustained)) |>
+      ungroup() |>
+      rename(Value = {{col}}) |>
+      mutate(Variable = col_name)
+    
+    ic_outcomes <- bind_rows(ic_outcomes,temp)
+  }
+  return(ic_outcomes)
+}

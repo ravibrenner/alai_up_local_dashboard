@@ -93,8 +93,8 @@ ui <- dashboardPage(
                     conditionalPanel("input.filter_by_year === true",
                                      uiOutput('active_year_choice'),
                                      uiOutput('date_filter_ui')),
-                )
-                
+                ),
+                uiOutput("full_report_download_ui")
     )
   ),
   dashboardBody(

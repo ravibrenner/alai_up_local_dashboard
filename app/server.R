@@ -212,8 +212,20 @@ server <- function(input, output, session) {
 
   })
   
+  full_report_data <- reactive({
+    req(tbl(), ic_summary_df(), cab_master_df())
+    full_report_table(ic_summary_df(), cab_master_df())
+  })
   
+  output$full_report_download <- download_table("ALAI_UP_Report",full_report_data())
   
+  output$full_report_download_ui <- renderUI({
+    req(ic_summary_df()) 
+    
+    downloadButton("full_report_download", "Download Results")
+  })
+  
+
   observeEvent(input$sidebarItemExpanded, {
     if (input$sidebarItemExpanded == "<strong>LAIindicators</strong>") {
       updateTabItems(session, inputId = "sidebar", selected = "lai_overview")
