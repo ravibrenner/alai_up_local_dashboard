@@ -39,7 +39,21 @@ renderSectionPage <- function(input, output, page_id, sections_info, n_output_id
                           "Immigration status","Language",
                           "Incarceration history"),
               selected = "Housing status")
-      } else {NULL}},
+      } else if (str_detect(section$id,"clinic_level_vl")){
+        fluidRow(
+          column(width = 3,
+                 selectInput(
+                   inputId = paste0(section$id,"_time_choice"),
+                   label = "Time period length, months", 
+                   choices = c(3,6,12),
+                   selected = 6)),
+          column(width = 3,
+                 radioButtons(
+                   inputId = paste0(section$id,"_pct_choice"),
+                   label = "Percent or Count?", 
+                   choices = c("Percent","Count"),
+                   selected = "Percent")))
+      } else{NULL}},
       plotOutput(section$plot, height = "auto"),
       uiOutput(section$download),
       size = "xs"

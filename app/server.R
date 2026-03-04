@@ -1058,7 +1058,8 @@ server <- function(input, output, session) {
       list(id = "time_to_el_vl1", title = str_c("Time to first VL ",val2()," pre-CAB VL ",val1()), plot = "time_to_el_vl1", download = "time_to_el_vl1_download_ui"),
       list(id = "time_to_el_vl2", title = str_c("Time to first VL ",val2()," pre-CAB VL ",val2()), plot = "time_to_el_vl2", download = "time_to_el_vl2_download_ui"),
       list(id = "time_to_failure1", title = str_c("Time to first virologic failure, pre-CAB VL ",val1()), plot = "time_to_failure1", download = "time_to_failure1_download_ui"),  
-      list(id = "time_to_failure2", title = str_c("Time to first virologic failure, pre-CAB VL ",val2()), plot = "time_to_failure2", download = "time_to_failure2_download_ui")
+      list(id = "time_to_failure2", title = str_c("Time to first virologic failure, pre-CAB VL ",val2()), plot = "time_to_failure2", download = "time_to_failure2_download_ui"),  
+      list(id = "clinic_level_vl", title = "Clinic level viral load", plot = "clinic_level_vl", download = "clinic_level_vl_download_ui")
     )
   })
   

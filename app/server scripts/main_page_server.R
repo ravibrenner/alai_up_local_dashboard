@@ -2390,6 +2390,116 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
     
   }, height = 400)
   
+  output$clinic_level_vl <- renderPlot({
+    temp <- tbl |>
+      select(alai_up_uid,site,  
+             icab_rpv_shot1_date,icab_rpv_shot2_date,
+             contains("icab_rpv_discontinued"),
+             contains("hiv_vl")) |>
+      mutate(across(!alai_up_uid,as.character)) |> 
+      pivot_longer(cols = contains("hiv_vl"),
+                   names_to = c("vl_index",".value"),
+                   names_pattern = "hiv_vl_(.*)_(date|result)") |>
+      mutate(vl_index = case_when(
+        vl_index == "pre_icab" ~ "0",
+        .default = vl_index
+      ),
+      vl_index = as.numeric(vl_index),
+      result = as.numeric(result),
+      across(contains("date"),as.Date)) |> 
+      filter(!is.na(result) & !is.na(date)) |>
+      mutate(
+        .by = alai_up_uid,
+        first_shot_date = min(icab_rpv_shot1_date,icab_rpv_shot2_date,na.rm = T),
+        vl_on_cab = case_when(
+          date >= first_shot_date & is.na(icab_rpv_discontinued_date) ~ 1,
+          date >= first_shot_date & date <= icab_rpv_discontinued_date ~ 1,
+          .default = 0),
+        vl_on_cab = if_else(any(vl_on_cab == 1),1,0),
+        ever_on_cab = if_else(any(first_shot_date != Inf),1,0)) |>
+      mutate(period = ceiling_date(date, unit = str_c(input$clinic_level_vl_time_choice, " months"))) |> 
+      arrange(alai_up_uid,date) |>
+      mutate(.by = c(alai_up_uid, period),
+             most_recent_vl = last(result),
+             on_cab_in_period = if_else(any(vl_on_cab == 1),1,0)) |> 
+      distinct(alai_up_uid,period,most_recent_vl,on_cab_in_period) |>
+      filter(period >= "2023-01-01") |>
+      mutate(most_recent_vl = {
+        if (input$vl_cutoff_input == "50 copies/mL"){
+          case_match(
+            most_recent_vl, 
+            1 ~ "<50",
+            2 ~ "<50",
+            3 ~ "\u226550",
+            4 ~ "\u226550",
+            5 ~ "\u226550",
+            6 ~ "\u226550")
+        } else if (input$vl_cutoff_input == "200 copies/mL"){
+          case_match(
+            most_recent_vl,
+            1 ~ "<200",
+            2 ~ "<200",
+            3 ~ "<200",
+            4 ~ "\u2265200",
+            5 ~ "\u2265200",
+            6 ~ "\u2265200")
+        } 
+      },
+      most_recent_vl = factor(most_recent_vl, levels = c(val2(),val1())),
+      on_cab_in_period = case_match(
+        on_cab_in_period,
+        0 ~ "Oral ART",
+        1 ~ "LAI ART"
+      )) |>
+      summarize(.by = c(period,on_cab_in_period,most_recent_vl),
+                n = n()) |>
+      mutate(.by = c(period, on_cab_in_period),
+             pct = n /sum(n)) |>
+      arrange(period)  |>
+      complete(period,on_cab_in_period, most_recent_vl,
+               fill = list(n = 0, pct = 0)) 
+    
+    p <- temp |>
+      bind_rows(temp |>
+                  summarize(.by = c(period, most_recent_vl),
+                            n = sum(n)) |>
+                  mutate(on_cab_in_period = "Overall")) |>
+      ggplot(aes(x = period, y = n, fill = factor(most_recent_vl)))
+    
+    if (input$clinic_level_vl_pct_choice == "Percent"){
+      p <- p + 
+        geom_bar(position = "fill", stat = "identity") +
+        scale_y_continuous(labels = scales::label_percent(accuracy = 1)) +
+        labs(y = "Percent of patients with VL")
+    } else {
+      p <- p + geom_bar(position = "stack", stat = "identity") + 
+        labs(y = "Number of patients with VL")}
+    
+    p <- p + scale_x_date(name = "Period",
+                          breaks = scales::breaks_width(str_c(input$clinic_level_vl_time_choice, " months")),
+                          date_labels = "%b %Y",
+                          expand = expansion(mult = c(0, 0.05))) + 
+      scale_fill_manual(name = "Most recent VL",
+                        values = c(
+                          "#FE5000",
+                          "#08519C"
+                        )) +
+      facet_wrap(~on_cab_in_period, ncol = 3) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 10))
+    
+    output$clinic_level_vl_plot_download <- download_box("clinic_level_vl",p)
+    output$clinic_level_vl_table_download <- download_table("clinic_level_vl",p$data)
+    output$clinic_level_vl_download_ui <- renderUI({
+      tagList(
+        downloadButton(outputId = "clinic_level_vl_plot_download", label = "Download plot"),
+        downloadButton(outputId = "clinic_level_vl_table_download",  
+                       label = "Download table",
+                       icon = icon("table"))
+      )
+    })
+    p
+  }, height = 400)
+  
 }
 
 
