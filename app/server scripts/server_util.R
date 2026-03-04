@@ -24,6 +24,12 @@ download_table <- function(exportname, plot_data){
   )
 }
 
+# Workaround for Chromium Issue 468227
+downloadButton <- function(...) {
+  tag <- shiny::downloadButton(...)
+  tag$attribs$download <- NULL
+  tag
+}
 
 # function for loading and processing initial data
 load_and_process_data <- function(input_df) {
