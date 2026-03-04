@@ -1632,5 +1632,72 @@ full_report_table <- function(summary_df, cab_df){
     
     ic_outcomes <- bind_rows(ic_outcomes,temp)
   }
-  return(ic_outcomes)
+  
+  # Cab doses
+  cab_doses_df <- cab_df |>
+    filter(shot_appt == 1) 
+  
+  # Total injections
+  inj_outcomes <- cab_doses_df |>
+    summarise(n = n()) |>
+    mutate(pct = n/sum(n),
+           on_time = "Total")
+  
+  # injections by on timeness
+  temp <- cab_doses_df |>
+    filter(!is.na(on_time)) |>
+    summarise(.by = on_time,
+              n = n()) |>
+    mutate(pct = n/sum(n),
+           on_time = factor(on_time, levels = c("Late","On time","Early")))
+  
+  # combine
+  inj_outcomes <- bind_rows(inj_outcomes,temp) |>
+    mutate(Variable = "Injections",
+           Value = on_time) |>
+    select(Variable, Value, n)
+  
+  # total clients
+  temp <- cab_doses_df |>
+    filter(!is.na(on_time)) |>
+    summarize(n = n_distinct(alai_up_uid)) |>
+    mutate(Variable = "Number of Clients",
+           Value = "Total")
+  
+  inj_outcomes <- bind_rows(inj_outcomes,temp)
+  
+  # Late doses
+  temp <- cab_doses_df |>
+    filter(!is.na(on_time)) |>
+    summarize(.by = alai_up_uid, 
+              late = sum(late)) |>
+    summarize(.by = late,
+              num_clients = n()) |>
+    arrange(late) |>
+    mutate(Variable = "Number of Clients",
+           Value = str_c(late, " late doses")) |>
+    rename(n = num_clients) |>
+    select(Variable, Value, n) 
+  
+  inj_outcomes <- bind_rows(inj_outcomes,temp)
+  
+  # Early doses
+  temp <- cab_doses_df |>
+    filter(!is.na(on_time)) |>
+    summarize(.by = alai_up_uid, 
+              early = sum(early)) |>
+    summarize(.by = early,
+              num_clients = n()) |>
+    arrange(early) |>
+    mutate(Variable = "Number of Clients",
+           Value = str_c(early, " early doses")) |>
+    rename(n = num_clients) |>
+    select(Variable, Value, n) 
+  
+  inj_outcomes <- bind_rows(inj_outcomes,temp)
+  
+  # Viral load outcomes
+  
+  return(list("LAI Indicators" = ic_outcomes,
+              "Injection outcomes" = inj_outcomes))
 }
