@@ -222,7 +222,9 @@ server <- function(input, output, session) {
   output$full_report_download_ui <- renderUI({
     req(ic_summary_df()) 
     
-    downloadButton("full_report_download", "Download Results")
+    downloadButton("full_report_download", "Download Results",
+                   style = "color: #333; background-color: #f4f4f4; border-color: #ccc; 
+                            margin-left: 20px; display: inline-block;")
   })
   
 
