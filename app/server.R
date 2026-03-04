@@ -314,7 +314,8 @@ server <- function(input, output, session) {
                      "Poverty level" = "poverty_level",
                      "Immigration status" = "immigration_status_undoc",
                      "Language" = "language",
-                     "Incarceration history" = "incarceration_history")
+                     "Incarceration history" = "incarceration_history",
+                     "Recent CD4" = "cd4_recent_result")
   
     if (length(site_list()) > 1){
       choice_list <- c(choice_list,c("Site" = "site"))
@@ -342,7 +343,8 @@ server <- function(input, output, session) {
                    "Poverty level" = "poverty_level",
                    "Immigration status" = "immigration_status_undoc",
                    "Language" = "language",
-                   "Incarceration history" = "incarceration_history")
+                   "Incarceration history" = "incarceration_history",
+                   "Recent CD4" = "cd4_recent_result")
     
     if (length(site_list()) > 1){
       all_vars <- c(all_vars,c("Site" = "site"))
@@ -507,7 +509,7 @@ server <- function(input, output, session) {
                      "Risk MSM","Risk IDU","Risk Heterosex",
                      "Employment status","Poverty level",
                      "Immigration status","Language",
-                     "Incarceration history")
+                     "Incarceration history","Recent CD4")
     
     if (length(site_list()) > 1){
       choice_list <- c(choice_list,"Site")
@@ -610,7 +612,7 @@ server <- function(input, output, session) {
                      "Risk MSM","Risk IDU","Risk Heterosex",
                      "Employment status","Poverty level",
                      "Immigration status","Language",
-                     "Incarceration history")
+                     "Incarceration history","Recent CD4")
     
     if (length(site_list()) > 1){
       choice_list <- c(choice_list,"Site")
@@ -791,7 +793,7 @@ server <- function(input, output, session) {
       "Risk MSM","Risk IDU","Risk Heterosex",
       "Employment status","Poverty level",
       "Immigration status","Language",
-      "Incarceration history")
+      "Incarceration history","Recent CD4")
     
     if (length(site_list()) > 1){
       temp <- c(temp,"Site")

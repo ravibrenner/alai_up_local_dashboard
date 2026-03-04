@@ -170,6 +170,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- demo_plot(tbl, var_str, base_size,
@@ -249,6 +250,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- demo_plot(tbl, var_str, base_size,
@@ -544,6 +546,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "assessed", by_group = T, 
@@ -680,6 +683,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "educated", by_group = T, 
@@ -814,6 +818,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "interested", by_group = T, 
@@ -980,6 +985,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "screened", by_group = T, 
@@ -1113,6 +1119,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "eligible", by_group = T, 
@@ -1276,6 +1283,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "prescribed", by_group = T, 
@@ -1380,6 +1388,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "initiated", by_group = T, 
@@ -1485,6 +1494,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                         var_name == "Immigration status" ~ "immigration_status_undoc",
                         var_name == "Language" ~ "language",
                         var_name == "Incarceration history" ~ "incarceration_history",
+                        var_name == "Recent CD4" ~ "cd4_recent_result",
                         var_name == "Site" ~ "site")
     
     p <- ic_var_plot(ic_summary_df, "sustained", by_group = T, 

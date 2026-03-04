@@ -28,8 +28,23 @@ download_table <- function(exportname, plot_data){
 # function for loading and processing initial data
 load_and_process_data <- function(input_df) {
   
+  add_missing_cols <- function(data, ...) {
+    cols <- c(...)
+    for (col in cols) {
+      if (!col %in% names(data)) {
+        data[[col]] <- NA
+      }
+    }
+    data
+  }
+  
   df <- input_df |>
     as_tibble() |>
+    add_missing_cols("race_ai_an","race_asian","race_black","race_nh_pi","race_white","race_other",
+                     "age","sex_birth","ethnicity_hispanic","insurance_status",
+                     "housing_status","gender_id","risk_msm","risk_idu","risk_heterosex",
+                     "employment_status", "poverty_level","immigration_status_undoc",
+                     "language","incarceration_history","cd4_recent_result") |>
     select(-any_of(c("date","index","event"))) |> 
     filter(age >= 18) |>
     # mutate(
@@ -173,7 +188,14 @@ load_and_process_data <- function(input_df) {
       .default = "Unknown"
     ), levels = c("No history of incarcerations","Current incarceration",
                   "History of incarceration","Community supervision (e.g. probation)",
-                  "Unknown"))) |>
+                  "Unknown")),
+    cd4_recent_result = factor(case_when(
+      cd4_recent_result < 200 ~ "<200",
+      cd4_recent_result >= 200 & cd4_recent_result < 350 ~ "200-349",
+      cd4_recent_result >= 350 & cd4_recent_result < 500 ~ "350-499",
+      cd4_recent_result >= 500 ~ "500+",
+      .default = "Unknown"
+    ), levels = c("<200","200-349","350-499","500+","Unknown"))) |>
     mutate(ever_on_cab = if_else(!is.na(icab_rpv_shot1_date) | 
                                  !is.na(icab_rpv_shot2_date),1,0))
   
@@ -345,6 +367,7 @@ demo_plot <- function(input_df, in_col, base_size_in,
                     in_col_string == "immigration_status_undoc" ~ "Immigration status",
                     in_col_string == "language" ~ "Language",
                     in_col_string == "incarceration_history" ~ "Incarceration history",
+                    in_col_string == "cd4_recent_result" ~ "Recent CD4",
                     in_col_string == "site" ~ "Site")
   
   if (is.null(selected_year)){
@@ -583,7 +606,7 @@ prepare_ic_summary <- function(input_df) {
              risk_msm, risk_idu, risk_heterosex,
              housing_status, employment_status,
              poverty_level, immigration_status_undoc, 
-             language, incarceration_history) |>
+             language, incarceration_history,cd4_recent_result) |>
     summarise(
       PWH = sum(PWH),
       PWH1 = sum(PWH1),
@@ -753,6 +776,7 @@ ic_var_plot <- function(input_df,
                       group_var_string == "immigration_status_undoc" ~ "Immigration status",
                       group_var_string == "language" ~ "Language",
                       group_var_string == "incarceration_history" ~ "Incarceration history",
+                      group_var_string == "cd4_recent_result" ~ "Recent CD4",
                       group_var_string == "site" ~ "Site")
     
     
@@ -1594,7 +1618,8 @@ full_report_table <- function(summary_df, cab_df){
                 "Poverty level" = "poverty_level",
                 "Immigration status" = "immigration_status_undoc",
                 "Language" = "language",
-                "Incarceration history" = "incarceration_history")
+                "Incarceration history" = "incarceration_history",
+                "Recent CD4" = "cd4_recent_result")
   
   ic_outcomes <- summary_df |>
     pivot_wider(names_from = "Variable", values_from = "Value") |>

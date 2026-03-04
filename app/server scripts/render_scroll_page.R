@@ -37,7 +37,7 @@ renderSectionPage <- function(input, output, page_id, sections_info, n_output_id
                           "Risk MSM","Risk IDU","Risk Heterosex",
                           "Employment status","Poverty level",
                           "Immigration status","Language",
-                          "Incarceration history"),
+                          "Incarceration history","Recent CD4"),
               selected = "Housing status")
       } else if (str_detect(section$id,"clinic_level_vl")){
         fluidRow(
