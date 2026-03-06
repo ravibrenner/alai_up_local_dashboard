@@ -75,6 +75,7 @@ main_page_server <- function(input, output, tbl,ic_summary_df,selected_site,cab_
                   n_on_cab = sum(ever_on_cab == 1))
       
       zip_geom <- readRDS("www/cb_2020_us_zcta520_500k.rds") |>
+        sf::st_sf() |>
         filter(ZCTA5CE20 %in% zip_counts$zip_code)
       
       zip_counts <- zip_counts |>
