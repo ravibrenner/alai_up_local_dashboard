@@ -26,7 +26,7 @@ ny_zips <- zip_code_db |>
   filter(county == "New York County",
          !is.na(lat))
 
-set.seed(2026)
+set.seed(123)
 ```
 
 ```{r}
@@ -150,9 +150,8 @@ df <- input_df |>
          ),
          # rx 
          icab_rpv_rx = case_when(
-           (icab_rpv_counsel_1_outcome == 3 | icab_rpv_counsel_2_outcome == 3) &
-             (icab_rpv_screen_1_outcome == 1 | icab_rpv_screen_1_outcome == 1) ~ rbinom(n,1,0.98)
-         ),
+           num_counsel == 1 & icab_rpv_counsel_1_outcome == 3 & icab_rpv_screen_1_outcome == 1 ~ rbinom(n,1,0.98),
+           num_counsel == 2 & icab_rpv_counsel_2_outcome == 3 & icab_rpv_screen_2_outcome == 1 ~ rbinom(n,1,0.98)),
          icab_rpv_rx_date = if_else(icab_rpv_rx == 1, ref_date - runif(n,60,90),NA),
          
          # icab shots
